@@ -17,7 +17,7 @@ Alternatively, install the development version from GitHub:
 
 ``` r
 # install.packages("devtools")
-devtools::install_github("santikka/Sima")
+devtools::install_github("santikk/Sima")
 ```
 
 ## Usage

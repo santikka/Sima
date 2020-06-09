@@ -23,7 +23,7 @@ install.packages("Sima")
 Alternatively, install the development version from GitHub:
 ```{r, eval = FALSE}
 # install.packages("devtools")
-devtools::install_github("santikka/Sima")
+devtools::install_github("santikk/Sima")
 ```
 
 ## Usage
