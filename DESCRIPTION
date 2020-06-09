@@ -1,0 +1,32 @@
+Package: Sima
+Title: Simulation Framework for Large-scale Individual Level Health Data Generation
+Version: 0.5.0
+Date: 2020-06-08
+Authors@R: c(
+    person(given = "Santtu",
+           family = "Tikka",
+           role = c("aut", "cre"),
+           email = "santtuth@gmail.com",
+           comment = c(ORCID = "0000-0003-4039-4342")),
+    person(given = "Jussi",
+           family = "Hakanen",
+           role = c("aut", "ctb"),
+           comment = c(ORCID = "0000-0001-9579-8657")),
+    person(given = "Mirka",
+           family = "Saarela",
+           role = c("aut", "ctb"),
+           comment = c(ORCID = "0000-0002-1559-154X")),
+    person(given = "Juha",
+           family = "Karvanen",
+           role = c("aut", "ctb"),
+           comment = c(ORCID = "0000-0001-5530-769X")))
+Description: Provides a simulation framework for large-scale individual level data generation in the health care domain. The simulators created under the framework are event based and follow a fixed-increment time progression. The initial population is modified by events that are applied at each time increment. A simulator can be calibrated according to chosen measures of similarity with the use of external validation data. Parallel computation can be used with foreach-backends such as doMPI and doParallel.
+License: GPL (>= 2)
+Imports: R6, data.table, dqrng, doMPI, foreach, iterators
+Suggests: knitr
+VignetteBuilder: knitr
+NeedsCompilation: no
+Maintainer: Santtu Tikka <santtuth@gmail.com>
+RoxygenNote: 7.1.0
+Roxygen: list(markdown = TRUE)
+Encoding: UTF-8

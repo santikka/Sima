@@ -1,0 +1,132 @@
+---
+title: "Introduction to the simulation framework"
+output: rmarkdown::html_vignette
+description: >
+    Learn how to define events and to get started with building your own simulator.
+vignette: >
+    %\VignetteIndexEntry{Introduction to the simulation framework}
+    %\VignetteEngine{knitr::rmarkdown}
+    %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+    collapse = TRUE,
+    comment = "#>"
+)
+```
+
+The goal of the package is to provide a framework for defining simulators for a variety of purposes and applications in the health care domain. Several design choices have been made to make the simulator as general as possible, highly scalable and easy to use. The package also provides tools to calibrate the simulator according to chosen metrics.
+
+The simulators created by the package are dynamic and operate on the individual level with a fixed-increment time progression where the synthetic population is subject to reoccurring events governed by stochastic processes.
+
+## Population fundamentals
+
+To define a simulator, an initial population and a list of events are required. The initial population can be defined directly from real data, or it can be synthetic. In R, the population should be defined as a `data.table` with a row for each individual and each column corresponding to a status variable. There are no restrictions on the population, except that a column named "alive" must always exist in the table, with values 0 and 1 indicating whether the individual is alive or not. The simulator also uses a status variable called "last_event" to denote which event was applied last before the individual died. This can be used for example to determine the cause of death in the case where the simulator contains multiple events that are able to cause mortality.
+
+## Event fundamentals
+
+Events are categorized into two distinct groups: manipulation events and accumulation events. Manipulation events modify the status of the population that is currently still alive in the simulation. This type of events can be for example aging, occurrence of a disease or mortality. Accumulation events on the other hand introduce new individuals to the population while keeping the status of the existing population otherwise intact. Accumulation events can model for example immigration or births. Each event has access to its own set of parameters that can be used to define statistical models and to enable the behavior of the event to be calibrated. Even functionality is essentially defined as an R expression that has access to the status of the synthetic population and the parameters of the event in question.
+
+## Constructing events
+
+Both types of events are defined as R6 classes with the following constructors
+
+```{r, eval = FALSE}
+ManipulationEvent$new(name, description, parameters, mechanism)
+AccumulationEvent$new(name, description, parameters, mechanism)
+```
+
+For both types of events, the arguments of the constructor are defined as follows: 
+
+ - `name` is a character string that serves as a unique identifier. 
+ - `description` is an optional argument that provides a text-based explanation about the functionality and purpose of the event
+ - `parameters` is numeric vector of parameters
+ - `mechanism` is an R expression that defines what the event does. 
+ 
+As an example, consider a simulator where events are applied daily and we wish to model the aging of individuals in the population. This can be accomplished with the following manipulation event:
+
+```{r, eval = FALSE}
+aging <- ManipulationEvent$new(
+  name = "Aging",
+  description = "Aging of individuals",
+  mechanism = expression({
+    status[living, age := age + 1.0 / 365.0]
+  })
+)
+```
+In this instance the event does not require any parameters. The logical vector `living` is always available denoting those individuals that are still alive in the population at the time of evaluation of the event in question. The shortcut `par` is used to refer to the parameter vector within the `mechanism` expression. The population `status` is a `data.table` so the appropriate syntax is required.
+
+In the case of manipulation events, the `mechanism` should not have a return value. In the case of accumulation events however, the return value should be a `data.table` with the same columns as `status` with each row depicting those individuals that are to be added to the population.
+
+## Constructing a Simulator
+
+The simulator is defined as an R6 class with the following constructor
+
+```{r, eval = FALSE}
+Simulator$new(initializer, manipulation_events, accumulation_events, time, seeds, ...)
+```
+
+The arguments of the constructor are defined as follows:
+
+ - `initializer` is a function that returns the initial population as a `data.table`.
+ - `manipulation_events` is a list of `ManipulationEvent` objects.
+ - `accumulation_events` is a list of `AccumulationEvent` objects.
+ - `time` is an object of R6 class `Time`.
+ - `...` are the additional arguments to be passed to `initializer`
+
+## Calibration
+
+After defining the events and the initial population, the next task is typically to obtain parameter values for the events such that some measure of the synthetic population matches that of an external validation data set as closely as possible. To this end, events with parameters can be configured after initialization. Furthermore, it is possible to run multiple simulations with different parameter configurations while keeping the initial population intact and using the same seed values for the pseudo random number generation each time such that the any difference in output will be purely a result of the varying parameter values.
+
+The `Simulator` class method `calibrate` serves as a wrapper for using the standard R optimization tool `optim` for calibration.
+
+```{r, eval = FALSE}
+Simulator$calibrate(t_sim, events, output, objective, inits, optim_args, auto = TRUE, ...)
+```
+
+The arguments for the method are as follows:
+
+ - `t_sim` is the length of the simulation for a single function evaluation in the optimization. The value that should be used is highly dependent on target feature of the calibration, the objective function and the size of population.
+ - `events` is a named list of manipulation events and accumulation events that are to be calibrated.
+ - `output` is a statistic that should be computed from the synthetic population for each parameter configuration.
+ - `objective` is the objective function used in optimization. The first argument of the function should accept the return value of of `output`. Typically this function compares a summary statistic from `output` against some external validation data.
+ - `inits` is an optional named list of initial parameter values for each event. If no initial values are provided, the current values are used instead.
+ - `optim_args` is a named list of additional arguments for `optim`.
+ - `auto` is a logical value indicating whether the events should be automatically reconfigured if the optimization converges.
+ - `...` gives additional arguments for `objective`.
+ 
+## Running the simulator
+
+Simulation sequences of varying lengths can be carried out with the `Simulator` class method `run`.
+
+```{r, eval = FALSE}
+Simulator$run(t_sim)
+```
+
+Here, `t_sim` is a numeric value indicating the length of the simulation in the internal simulation units (e.g., days). The current status of the population can be accessed at any time via the method `get_population`.
+
+## Parallel computation
+
+The simulator can be configured to take advantage of multiple computing cores via the class method `start_cluster`. 
+```{r, eval = FALSE}
+Simulator$start_cluster(cl, nc, export, interface)
+```
+The arguments are:
+
+ - `cl` is a cluster object.
+ - `nc` denotes the number of workers to use.
+ - `export` is a character vector of object names in the global environment that should be made available to the workers, such as user-defined functions or additional data.
+ - `interface` gives the `foreach` backend to use, can be either `doParallel` or `doMPI`.
+
+The population is split into chunks of equal size (if possible) and distributed to the available workers along with other necessary data. The implementation takes advantage of the `foreach` package for this purpose and any interface to this looping construct can be used fundamentally, but only `doParallel` and `doMPI` are currently supported. The following example demonstrates the process of setting up the computation cluster in the case of `doParallel`:
+
+```{r, eval = FALSE}
+nc <- parallel::detectCores()
+cl <- parallel::makeCluster(nc)
+doParallel::registerDoParallel(cl)
+
+sim$start_cluster(cl, nc, interface = "doParallel")
+# Carry out calibration / simulations
+sim$stop_cluster()
+```
