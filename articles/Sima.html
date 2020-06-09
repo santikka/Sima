@@ -50,6 +50,18 @@
 <li>
   <a href="../reference/index.html">Reference</a>
 </li>
+<li class="dropdown">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
+    Articles
+     
+    <span class="caret"></span>
+  </a>
+  <ul class="dropdown-menu" role="menu">
+<li>
+      <a href="../articles/example.html">Example with diabetes and stroke</a>
+    </li>
+  </ul>
+</li>
       </ul>
 <ul class="nav navbar-nav navbar-right">
 <li>
@@ -144,41 +156,47 @@
 <div id="calibration" class="section level2">
 <h2 class="hasAnchor">
 <a href="#calibration" class="anchor"></a>Calibration</h2>
-<p>After defining the events and the initial population, the next task is typically to obtain parameter values for the events such that some measure of the synthetic population matches that of an external validation data set as closely as possible. To this end, events with parameters can be configured after initialization. Furthermore, it is possible to run multiple simulations with different parameter configurations while keeping the initial population intact and using the same seed values for the pseudo random number generation each time such that the any difference in output will be purely a result of the varying parameter values.</p>
-<p>The <code>Simulator</code> class method <code>calibrate</code> serves as a wrapper for using the standard R optimization tool <code>optim</code> for calibration.</p>
-<div class="sourceCode" id="cb4"><html><body><pre class="r"><span class="no">Simulator</span>$<span class="fu">calibrate</span>(<span class="no">t_sim</span>, <span class="no">events</span>, <span class="no">output</span>, <span class="no">objective</span>, <span class="no">inits</span>, <span class="no">optim_args</span>, <span class="kw">auto</span> <span class="kw">=</span> <span class="fl">TRUE</span>, <span class="no">...</span>)</pre></body></html></div>
+<p>After defining the events and the initial population, the next task is typically to obtain parameter values for the events such that some measure of the synthetic population matches that of an external validation data set as closely as possible. To this end, events with parameters can be configured after initialization. Furthermore, it is possible to run multiple simulations with different parameter configurations while keeping the initial population intact and using the same seed values for the pseudo random number generation each time such that the any difference in output will be purely a result of the varying parameter values. Standard R optimization tools such as <code>optim</code> can be used.</p>
+<p>The <code>Simulator</code> class method <code>configure</code> makes it easy to run the simulation with different parameter values while keeping the initial population intact between runs.</p>
+<div class="sourceCode" id="cb4"><html><body><pre class="r"><span class="no">Simulator</span>$<span class="fu">calibrate</span>(<span class="no">t_sim</span>, <span class="no">p</span>, <span class="no">output</span>, <span class="kw">seeds</span> <span class="kw">=</span> <span class="fl">123</span>, <span class="no">...</span>)</pre></body></html></div>
 <p>The arguments for the method are as follows:</p>
 <ul>
 <li>
 <code>t_sim</code> is the length of the simulation for a single function evaluation in the optimization. The value that should be used is highly dependent on target feature of the calibration, the objective function and the size of population.</li>
 <li>
-<code>events</code> is a named list of manipulation events and accumulation events that are to be calibrated.</li>
+<code>p</code> is a named list of numeric vectors with names corresponding to the event names to be calibrated. The length of each element should be the same as the number of parameters that the event has.</li>
 <li>
-<code>output</code> is a statistic that should be computed from the synthetic population for each parameter configuration.</li>
+<code>output</code> is a function that is applied to the synthetic population after the simulation. The first argument should accept the status <code>data.table</code>.</li>
 <li>
-<code>objective</code> is the objective function used in optimization. The first argument of the function should accept the return value of of <code>output</code>. Typically this function compares a summary statistic from <code>output</code> against some external validation data.</li>
+<code>seeds</code> are the seed values to use for random number generation.</li>
 <li>
-<code>inits</code> is an optional named list of initial parameter values for each event. If no initial values are provided, the current values are used instead.</li>
-<li>
-<code>optim_args</code> is a named list of additional arguments for <code>optim</code>.</li>
-<li>
-<code>auto</code> is a logical value indicating whether the events should be automatically reconfigured if the optimization converges.</li>
-<li>
-<code>...</code> gives additional arguments for <code>objective</code>.</li>
+<code>...</code> are the additional arguments passed to output.</li>
 </ul>
+<p>For the standard <code>optim</code> function, the objective function to use and the calibration process itself take the following form</p>
+<div class="sourceCode" id="cb5"><html><body><pre class="r">obj_optim &lt;- function(par, validation) {
+  p &lt;- list("Event 1" = par[ind_1],
+            "Event 2" = par[ind_2],
+            ...
+            "Event n" = par[ind_n])
+  out &lt;- sim$configure(t_sim, p, output)
+  return(objective(out, validation))
+}
+
+result &lt;- optim(par = par_init, fn = obj_optim, validation = some_data)</pre></body></html></div>
+<p>Note that this is not actual usable R code, but simply a pseudo-code representation in R syntax, where the ellipsis simply denotes a list of <code>n</code> events. The idea is that the user has to define which event corresponds to which set of parameter indices, for example, event named “Event 1” is assigned parameters from <code>par</code> at <code>ind_1</code>. The indices should be disjoint. Next, the <code>configure</code> method is used to compute a summary statistics from the synthetic population. This is then compared to a set of validation data, provided in <code>validation</code> by the actual objective function, denoted here by <code>objective</code>. For other functions beside <code>optim</code>, alternate formulations will likely have to be used. See the <code>vignette("example")</code> for a practical demonstration of the entire calibration process.</p>
 </div>
 <div id="running-the-simulator" class="section level2">
 <h2 class="hasAnchor">
 <a href="#running-the-simulator" class="anchor"></a>Running the simulator</h2>
 <p>Simulation sequences of varying lengths can be carried out with the <code>Simulator</code> class method <code>run</code>.</p>
-<div class="sourceCode" id="cb5"><html><body><pre class="r"><span class="no">Simulator</span>$<span class="fu">run</span>(<span class="no">t_sim</span>)</pre></body></html></div>
+<div class="sourceCode" id="cb6"><html><body><pre class="r"><span class="no">Simulator</span>$<span class="fu">run</span>(<span class="no">t_sim</span>)</pre></body></html></div>
 <p>Here, <code>t_sim</code> is a numeric value indicating the length of the simulation in the internal simulation units (e.g., days). The current status of the population can be accessed at any time via the method <code>get_population</code>.</p>
 </div>
 <div id="parallel-computation" class="section level2">
 <h2 class="hasAnchor">
 <a href="#parallel-computation" class="anchor"></a>Parallel computation</h2>
 <p>The simulator can be configured to take advantage of multiple computing cores via the class method <code>start_cluster</code>.</p>
-<div class="sourceCode" id="cb6"><html><body><pre class="r"><span class="no">Simulator</span>$<span class="fu">start_cluster</span>(<span class="no">cl</span>, <span class="no">nc</span>, <span class="no">export</span>, <span class="no">interface</span>)</pre></body></html></div>
+<div class="sourceCode" id="cb7"><html><body><pre class="r"><span class="no">Simulator</span>$<span class="fu">start_cluster</span>(<span class="no">cl</span>, <span class="no">nc</span>, <span class="no">export</span>, <span class="no">interface</span>)</pre></body></html></div>
 <p>The arguments are:</p>
 <ul>
 <li>
@@ -191,7 +209,7 @@
 <code>interface</code> gives the <code>foreach</code> backend to use, can be either <code>doParallel</code> or <code>doMPI</code>.</li>
 </ul>
 <p>The population is split into chunks of equal size (if possible) and distributed to the available workers along with other necessary data. The implementation takes advantage of the <code>foreach</code> package for this purpose and any interface to this looping construct can be used fundamentally, but only <code>doParallel</code> and <code>doMPI</code> are currently supported. The following example demonstrates the process of setting up the computation cluster in the case of <code>doParallel</code>:</p>
-<div class="sourceCode" id="cb7"><html><body><pre class="r"><span class="no">nc</span> <span class="kw">&lt;-</span> <span class="kw pkg">parallel</span><span class="kw ns">::</span><span class="fu"><a href="https://rdrr.io/r/parallel/detectCores.html">detectCores</a></span>()
+<div class="sourceCode" id="cb8"><html><body><pre class="r"><span class="no">nc</span> <span class="kw">&lt;-</span> <span class="kw pkg">parallel</span><span class="kw ns">::</span><span class="fu"><a href="https://rdrr.io/r/parallel/detectCores.html">detectCores</a></span>()
 <span class="no">cl</span> <span class="kw">&lt;-</span> <span class="kw pkg">parallel</span><span class="kw ns">::</span><span class="fu"><a href="https://rdrr.io/r/parallel/makeCluster.html">makeCluster</a></span>(<span class="no">nc</span>)
 <span class="kw pkg">doParallel</span><span class="kw ns">::</span><span class="fu"><a href="https://rdrr.io/pkg/doParallel/man/registerDoParallel.html">registerDoParallel</a></span>(<span class="no">cl</span>)
 
