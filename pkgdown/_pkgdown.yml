@@ -1,3 +1,7 @@
+url: https://santikk.github.io/Sima
+
+destination: ./../gh-pages/
+
 template:
   params:
     bootswatch: yeti

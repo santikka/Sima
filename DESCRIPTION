@@ -22,6 +22,8 @@ Authors@R: c(
            comment = c(ORCID = "0000-0001-5530-769X")))
 Description: Provides a simulation framework for large-scale individual level data generation in the health care domain. The simulators created under the framework are event based and follow a fixed-increment time progression. The initial population is modified by events that are applied at each time increment. A simulator can be calibrated according to chosen measures of similarity with the use of external validation data. Parallel computation can be used with foreach-backends such as doMPI and doParallel.
 License: GPL (>= 2)
+URL: https://santikk.github.io/Sima, https://github.com/santikk/Sima
+BugReports: https://github.com/santikk/Sima/issues
 Imports: R6, data.table, dqrng, doMPI, foreach, iterators
 Suggests: knitr
 VignetteBuilder: knitr
