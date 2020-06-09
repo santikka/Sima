@@ -8,9 +8,7 @@
 Object of \code{\link{R6Class}} ManipulationEvent.
 }
 \description{
-Class providing accumulation event functionality. Inherited from Event.
-
-Class providing accumulation event functionality. Inherited from Event.
+Provides accumulation event functionality. Inherited from Event.
 }
 \section{Super class}{
 \code{\link[Sima:Event]{Sima::Event}} -> \code{AccumulationEvent}
@@ -53,6 +51,9 @@ Apply an accumulation event
 \item{\code{parallel}}{A logical value indicating if parallel computation is being used in simulation.}
 }
 \if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+A \code{\link{data.table}} with the new individuals added.
 }
 }
 \if{html}{\out{<hr>}}

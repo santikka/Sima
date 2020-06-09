@@ -27,7 +27,7 @@ Simulator <- R6::R6Class("Simulator",
         ##' @param time A Time object.
         ##' @param n Size of the initial population.
         ##' @param seeds Seed values for random number generation.
-        ##' @return A new 'Simulator' object.
+        ##' @return A new \code{\link{Simulator}} object.
         initialize = function(initializer = NULL, manipulation_events = list(), accumulation_events = list(), time = Time$new("day", Sys.Date()), n, seeds = 123) {
             if (!is.function(initializer)) stop("Argument 'initializer' is not a function")
             n_acc <- length(accumulation_events)
@@ -49,6 +49,7 @@ Simulator <- R6::R6Class("Simulator",
             private$status[ ,last_event := 0]
             private$accumulation_events <- accumulation_events
             private$manipulation_events <- manipulation_events
+            private$settings <- list(cluster_enabled = FALSE, monitor_enabled = FALSE)
             private$unlisted_events <- unlist(list(private$manipulation_events, private$accumulation_events))
             if (length(private$unlisted_events) > 0) {
                 mapply(function(e, id) e$set_id(id), private$unlisted_events, 1:length(private$unlisted_events))
@@ -59,7 +60,6 @@ Simulator <- R6::R6Class("Simulator",
             private$seeds <- as.integer(seeds)
             private$reset <- TRUE
             private$history <- list()
-            private$settings <- list(cluster_enabled = FALSE, monitor_enabled = FALSE)
         },
 
         ##' @description
@@ -253,11 +253,10 @@ Simulator <- R6::R6Class("Simulator",
         ##' @description
         ##' Configure events, run a simulation and compute a summary statistic for calibration. The original status is restored after completion.
         ##' @param t_sim A numeric value indicating the length of time to process.
-        ##' @param unit A character string giving the time unit that \code{t_sim} corresponds to.
         ##' @param p A list of parameter values. The names of the list should match the Event object names to be configured.
         ##' @param output A function that computes a summary statistic from the simulation.
         ##' @param seeds Seed values for random number generation.
-        ##' @param ... Additional arguments passed to \code{output_function}.
+        ##' @param ... Additional arguments passed to \code{output}.
         ##' @return The output of \code{output_function} evaluated for the resulting population.
         configure = function(t_sim, p, output, seeds = 123, ...) {
             if (length(private$history) > 0) warning("Previous simulation history was overwritten by calibration")
@@ -273,7 +272,7 @@ Simulator <- R6::R6Class("Simulator",
                 })
                 self$run(t_sim = t_sim)
                 status_temp <- data.table::rbindlist(lapply(private$settings$status_split, "[[", "value"))
-                out <- output(status_temp, private$history, ...)
+                out <- output(status_temp, ...)
                 status_temp <- NULL
                 private$settings$status_split <- orig_status
                 private$seeds <- orig_seeds
@@ -282,7 +281,7 @@ Simulator <- R6::R6Class("Simulator",
             } else {
                 orig_status <- data.table::copy(private$status)
                 self$run(t_sim = t_sim)
-                out <- output(private$status, private$history, ...)
+                out <- output(private$status, ...)
                 private$status <- orig_status
                 private$seeds <- orig_seeds
                 private$reset <- TRUE
@@ -290,58 +289,6 @@ Simulator <- R6::R6Class("Simulator",
             }
             private$runtime <- 0
             return(out)
-        },
-
-        ##' @description
-        ##' Calibrate the simulator using 'optim'.
-        ##' @param t_sim A numeric value indicating the length of the simulation to use for each function evaluation.
-        ##' @param events A list of event names to be calibrated.
-        ##' @param output A function that computes a summary statistic from the synthetic population.
-        ##' @param objective The objective function to be used for the calibration. The first argument should accept the return value of 'output'.
-        ##' @param inits A named list of numeric vectors with names corresponding to events in 'event'. Gives initial values for the optimization. If not given, current values are used instead.
-        ##' @param optim_args A named list of additional arguments passed to 'optim'
-        ##' @param auto A logical value. Indicates whether the events should be automatically reconfigured to use to optimal value if optimization converges. 
-        ##' @param ... Additional arguments passed to 'objective'.
-        ##' @return The result of \link{\code{optim}} where 'par' is a named list corresponding to the event parameter values for each event.
-        calibrate = function(t_sim, events, output, objective, inits, optim_args, auto = TRUE, ...) {
-            force(events)
-            force(objective)
-            force(output)
-            force(...)
-            objective_internal <- function(x) {
-                p <- vector(mode = "list", length = length(events))
-                e_par <- 0
-                for (n in events) {
-                    e <- private$unlisted_events[[private$settings$event_indices[[n]]]]$get_parameters()
-                    e_increment <- e_par + length(e)
-                    p[[n]] <- x[(e_par + 1):e_increment]
-                    e_par <- e_increment
-                }
-                out <- self$configure(t_sim, p, output)
-                return(objective(out, ...))
-            }
-            x_init <- c()
-            if (missing(inits)) {
-                for (n in events) {
-                    x_init <- c(x_init, private$unlisted_events[[private$settings$event_indices[[n]]]]$get_parameters())
-                }
-            } else {
-                x_init <- unlist(inits)
-            }
-            opt <- do.call("optim", c(list(par = x_init, fn = objective_internal), optim_args))
-            p <- vector(mode = "list", length = length(events))
-            e_par <- 0
-            for (n in events) {
-                e <- private$unlisted_events[[private$settings$event_indices[[n]]]]$get_parameters()
-                e_increment <- e_par + length(e)
-                p[[n]] <- opt$par[(e_par + 1):e_increment]
-                e_par <- e_increment
-            }
-            if (auto & opt$convergence == 0) {
-                self$reconfigure(p)
-            }
-            opt$par <- p
-            return(return(opt))
         },
 
         ##' @description

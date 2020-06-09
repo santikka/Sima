@@ -1,0 +1,560 @@
+---
+title: "Example with diabetes and stroke"
+output: rmarkdown::html_vignette
+description: >
+    An example use case of the simulation framework for modeling the incidence of diabetes and stroke, and mortality.
+vignette: >
+    %\VignetteIndexEntry{Example with diabetes and stroke}
+    %\VignetteEngine{knitr::rmarkdown}
+    %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+    collapse = TRUE,
+    comment = "#>"
+)
+```
+
+In this example we consider a simulator for the incidence of type-2 diabetes and stroke with various risk factors as well as mortality from stroke and other causes.
+
+## Data files
+To run the example, the following data files are needed
+
+ - The Finnish WHO MONICA data: http://www.thl.fi/publications/monica/monograph_cd/data/form04_3.zip
+ - Finnish mortality statistics from Statistics Finland for the year 2017. The material was downloaded from Statistics Finland's interface service on 10 May 2020 with the license [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/deed.en): http://users.jyu.fi/~santikka/Sima/data/kuol_007_201700.csv
+ - Finnish age structure statistics from Statistics Finland for the year 2017. The material was downloaded from Statistics Finland's interface service on 11 May 2020 with the license [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/deed.en): http://users.jyu.fi/~santikka/Sima/data/vaesto_3112_2017.csv
+ 
+The data files (with MONICA data unzipped) should be placed to directory called `data` in relation to the working directory for the purposes of this example.
+
+## R scripts
+The R script files required to run the example can be downloaded at http://users.jyu.fi/~santikka/Sima/DiabetesAndStroke.zip  
+
+The zip file contains the following
+
+ - `DiabetesAndStroke.R` is the primary script that contains the all the simulator definition and simulation runs.
+ - `DiabetesAndStrokeEvents.R` contains all the event definitions.
+ - `DiabetesAndStrokeData.R` contains the function to generate the initial population.
+ - `DiabetesAndStrokeFunctions.R` contains utility function definitions that are used throughout.
+ 
+The contents of these scripts are also listed in the following sections for direct viewing
+ 
+## Main script
+
+The file `DiabetesAndStroke.R` provides the code to run the entire example
+
+```{r, eval = FALSE}
+library(Sima)
+library(data.table)
+library(ggplot2)
+
+# The path should be set to the location of the R-scripts, such that
+# the data-directory is present in this location
+
+file_path <- ""
+setwd(file_path)
+
+# Verify that all data files are available
+if (!file.exists("data/vaesto_3112_2017.csv")) {
+    stop("Data file vaesto_3112_2017.csv not found in data directory.")
+}
+
+if (!file.exists("data/kuol_007_201700.csv")) {
+    stop("Data file kuol_007_201700 not found in data directory.")
+}
+
+if (!file.exists("data/form04_3.txt")) {
+    stop("Data file form04_3.txt not found in data directory.")
+}
+
+#####################
+# Utility Functions #
+#####################
+
+source("DiabetesAndStrokeFunctions.R")
+
+##########
+# Events #
+##########
+
+source("DiabetesAndStrokeEvents.R")
+
+######################
+# Initial Population #
+######################
+
+source("DiabetesAndStrokeData.R")
+
+##################
+# Initialization #
+##################
+
+sim <- Simulator$new(
+    initializer = initializer,
+    manipulation_events = all_events,
+    time = Time$new(unit = "day", start = Sys.Date()),
+    seeds = 242,
+    n = 1e6
+)
+
+###############
+# Calibration #
+###############
+
+## Uncomment to enable a parallel cluster for remaining computations
+#if (require(doParallel)) {
+#   nc <- parallel::detectCores()
+#   cl <- parallel::makeCluster(nc)
+#   doParallel::registerDoParallel(cl)
+#   ## User made functions/objects have to be manually exported, list them in 'export'
+#   sim$start_cluster(cl, nc, export = c("logit", "expit", "rbern"))
+#}
+
+# Uncomment to perform calibration
+#calib_result <- optim(c(18, 140), mortality_objective, method = "Nelder-Mead")
+
+# Using a population of 1 million individuals, the following optimum is found:
+# c(14.10523, 158.18299)
+
+# Configure the simulator to use the optimal parameters (if calibration not run)
+sim$reconfigure(list("Other Mortality" = c(14.10523, 158.18299)))
+
+# Visualize and compare simulated mortality to official statistics
+sim$run(364)
+sim$stop_cluster()
+
+mortality <- read.csv(file = "data/kuol_007_201700.csv", header = TRUE, sep = ",")
+mortality[,3] <- mortality[,3]/1000
+n <- nrow(mortality)
+mortality <- mortality[mortality$Age >= 30,]
+sim_mortality <- mortality_df(sim$get_population(), min_age = 30)
+
+df <- data.frame(age = rep(sim_mortality$age_group, 2),
+                 mortality = c(sim_mortality$deaths/sim_mortality$size, mortality[,3]),
+                 group = gl(2, nrow(mortality), labels = c("Simulated", "Reported")))
+
+# Plot comparing mortality in the synthetic population to the official statistics
+g <- ggplot(df, aes(x = age, y = mortality, linetype = group)) + 
+    geom_line(lwd = 0.5) +
+    theme_bw(base_size = 14) +
+    theme(
+        legend.position = c(0.2, 0.82),
+        legend.key.width = unit(1.75, "cm"),
+        legend.key.size = unit(1.5, "line"),
+        legend.text = element_text(size = 14),
+        legend.background = element_rect(fill = "white", size = 2, linetype = "solid")
+    ) +
+    scale_x_continuous(limits = c(30, 100), breaks = 3:10 * 10) +
+    scale_y_continuous(limits = c(0, 0.45)) +
+    scale_linetype_manual(name = NULL, values = c("longdash", "solid")) +
+    labs(x = "Age", y = "Mortality", title = NULL)
+g
+
+######################
+# Selective sampling #
+######################
+
+# Create a smaller population corresponding to the target sample
+sim_sample <- Simulator$new(
+    initializer = initializer,
+    manipulation_events = all_events,
+    time = Time$new(unit = "day", start = Sys.Date()),
+    seeds = 242,
+    n = 1e5
+)
+
+## Configure the simulator to use the optimal parameters
+sim_sample$reconfigure(list("Other Mortality" = c(14.10523, 158.18299)))
+
+dropout <- function(dt) {
+    beta <- c(-9.172640, -0.311690, 0.113614, -0.090696, 0.036383, 0.689770)
+    X <- as.matrix(dt[ ,.(const = 1, sex, age, bmi, waist_circumference, smoking)])
+    return(rbern(expit(as.numeric(X %*% beta))))
+}
+
+drop_start <- dropout(sim_sample$get_population())
+
+# Uncomment to enable a parallel cluster for remaining computations
+#if (require(doParallel)) {
+#    nc <- parallel::detectCores()
+#    cl <- parallel::makeCluster(nc)
+#    doParallel::registerDoParallel(cl)
+#    ## User made functions/objects have to be manually exported, list them in 'export'
+#    sim_sample$start_cluster(cl, nc, export = c("expit", "logit", "rbern"))
+#}
+
+sim_sample$run(365)
+sim_sample$stop_cluster()
+
+pop <- sim_sample$get_population()[order(id),]
+drop_end <- dropout(pop)
+
+# Comparing to subsets: one with dropout (miss), one without (full)
+included_miss <- (pop$alive == 1 | pop$stroke == 1) & drop_start == 0 & drop_end == 0
+included_full <- (pop$alive == 1 | pop$stroke == 1)
+
+# Separate models for males and females
+model_miss_m <- glm(stroke ~ age + smoking + blood_pressure + hdl_cholesterol + diabetes + parent_stroke, 
+                    data = pop[included_miss & sex == 0, ], family = binomial())
+model_miss_f <- glm(stroke ~ age + smoking + blood_pressure + hdl_cholesterol + diabetes + parent_stroke, 
+                    data = pop[included_miss & sex == 1, ], family = binomial())
+
+model_full_m <- glm(stroke ~ age + smoking + blood_pressure + hdl_cholesterol + diabetes + parent_stroke, 
+                    data = pop[included_full & sex == 0, ], family = binomial())
+model_full_f <- glm(stroke ~ age + smoking + blood_pressure + hdl_cholesterol + diabetes + parent_stroke, 
+                    data = pop[included_full & sex == 1, ], family = binomial())
+
+summary(model_miss_m)
+summary(model_miss_f)
+summary(model_full_m)
+summary(model_full_f)
+
+```
+
+## Events
+
+The file `DiabetesAndStrokeEvents.R` includes the event definitions
+
+```{r, eval = FALSE}
+aging <- ManipulationEvent$new(
+    name = "Aging",
+    description = "Normal aging of individuals",
+    parameters = c(),
+    mechanism = expression({
+        status[living, age := age + 1.0 / 365.0]
+    })
+)
+
+other_mortality <- ManipulationEvent$new(
+    name = "Other Mortality",
+    description = "Death due to other reasons than stroke",
+    parameters = c(13.16346, 165.34514),
+    mechanism = expression({
+        status[living, alive := rbern(1 - pweibull(age, shape = par[1], scale = par[2]))]
+    })
+)
+
+get_stroke <- ManipulationEvent$new(
+    name = "Stroke",
+    description = "Risk of suffering a stroke",
+    parameters = c(
+        # const  age    smoking  bp        hdl     diab.   parents' stroke
+        -11.699, 0.1153, 0.4981, 0.0149,  -0.4406, 0.879,  0.2933, # stroke, male
+        -7.966,  0.0633, 0.4163, 0.00893, -0.7636, 1.2383, 0.5470  # stroke, female
+    ),
+    mechanism = expression({
+        subset_male   <- status[living & stroke == 0L & sex == 0L, which = TRUE]
+        subset_female <- status[living & stroke == 0L & sex == 1L, which = TRUE]
+        X_male   <- as.matrix(status[subset_male,   .(const = 1, age, smoking, blood_pressure, hdl_cholesterol, diabetes, parent_stroke)])
+        X_female <- as.matrix(status[subset_female, .(const = 1, age, smoking, blood_pressure, hdl_cholesterol, diabetes, parent_stroke)])
+
+        # Compute 1 day risk from 10 year risk by assuming a Poisson process.
+        prob_male_10year   <- 1 - pmin(expit( (X_male %*% par[1:7])[ ,1] ), 1)
+        prob_female_10year <- 1 - pmin(expit( (X_female %*% par[8:14])[ ,1] ), 1)
+        lambda_male   <- -log(pmax(prob_male_10year, 1e-12)) / 3650
+        lambda_female <- -log(pmax(prob_female_10year, 1e-12)) / 3650
+        new_stroke_male   <- rbern(1 - exp(-lambda_male))
+        new_stroke_female <- rbern(1 - exp(-lambda_female))
+
+        # Assign dates for stroke occurrence, update stroke status
+        status[subset_male,   `:=` (age_at_stroke = age * new_stroke_male,   stroke = new_stroke_male)]
+        status[subset_female, `:=` (age_at_stroke = age * new_stroke_female, stroke = new_stroke_female)]
+    })
+)
+
+get_diabetes <- ManipulationEvent$new(
+    name = "Diabetes",
+    description = "Risk of getting diabetes",
+    parameters = c(
+        # const  age(45-54) age(55-64) bmi(25-30) bmi(>30) w. circ. (1) w.circ. (2) bp med. h. glucose
+        -5.514,  0.628,     0.892,     0.165,     1.096,   0.857,       1.350,      0.711,  2.139
+    ),
+    mechanism = expression({
+        subset <- status[living & diabetes == 0L & age >= 45, which = TRUE]
+        X <- as.matrix(status[subset, .(
+            const = 1,
+            age1 = (age >= 45 & age < 54), 
+            age2 = (age >= 54), 
+            bmi1 = (bmi > 25 & bmi <= 30), 
+            bmi2 = (bmi > 30), 
+            waist_circumference1 = (sex == 0L) * (waist_circumference >= 94 & waist_circumference < 102) +
+                                   (sex == 1L) * (waist_circumference >= 80 & waist_circumference < 88),
+            waist_circumference2 = (sex == 0L) * (waist_circumference >= 102) + 
+                                   (sex == 1L) * (waist_circumference >= 88),
+            takes_bp_medicine, 
+            high_glucose)
+        ])
+
+        # Compute 1 day risk from 10 year risk by assuming a Poisson process.
+        prob_10year <- 1 - pmin(expit((X %*% par)[ ,1]), 1)
+        lambda <- -log(pmax(prob_10year, 1e-12)) / 3650
+        new_diabetes <- rbern(1 - exp(-lambda))
+
+        # Update diabetes status
+        status[subset, `:=` (diabetes = new_diabetes)]
+    })
+)
+
+stroke_mortality <- ManipulationEvent$new(
+    name = "Stroke Mortality",
+    description = "Death due to stroke",
+    parameters = c(8.1748187, -9.5942954, -0.2828828), 
+    mechanism = expression({
+        status[living & stroke == 1L, alive := rbern(ifelse(age - age_at_stroke < 28.0 / 365.0, 0.72 ^ (1 / 28), expit(par[1] + par[2] * exp(((age - age_at_stroke) * 365 - 27) * par[3]))))]
+    })
+)
+
+bp_medication <- ManipulationEvent$new(
+    name = "Medicine",
+    description = "Blood pressure medication",
+    parameters = c(140),
+    mechanism = expression({
+        status[living & blood_pressure >= par[1] & takes_bp_medicine == 0L, `:=` (takes_bp_medicine = 1L, blood_pressure = blood_pressure - 5)]
+    })
+)
+
+# Further event organizing
+stroke_events  <- list(stroke_mortality, get_stroke)
+attr(stroke_events, "ordered") <- TRUE
+other_events <- list(stroke_events, other_mortality, bp_medication, get_diabetes)
+all_events <- list(aging, other_events)
+attr(all_events, "ordered") <- TRUE
+
+```
+
+## Initial population
+
+The file `DiabetesAndStrokeData.R` contains the following function for generating the initial population (of size `n`)
+
+```{r, eval = FALSE}
+initializer <- function(n) {
+    set.seed(100) # Seed for initial data generation
+    widths <- c(2,1,2,2,6,1,3,8,8,1,1,1,1,2,1,3,1,1,4,1,3,2,1,3,1,3,2,1,1,1,1,1,1,1,1,1,2,1,
+                1,3,3,2,3,3,2,1,2,2,4,2,3,3,8,3,3,8,3,4,2,3,4,4,4,2,1,2,1,1,1,1,1,4,4,4,4)
+    colnames <- c("form","versn","centre","runit","serial","numsur","samunit","dexam","mbirth",
+                  "agegr","sex","marit","edlevel","school","cigs","numcigs","daycigs","evercig",
+                  "stop","iflyear","maxcigs","cigage","cigarsm","cigar","pipesm","pipe","othersm",
+                  "hibp","drugs","bprecd","hich","chdt","chrx","chrecd","asp","menop","agem",
+                  "horm","pill","syst1","diast1","rz1","syst2","diast2","rz2","cuff","arm",
+                  "bpcoder","timebp","rtemp","chol","choldl","dchol","hdl","hdldl","dhdl","scn",
+                  "cotin","carbmon","height","weight","waist","hip","whcoder","oversion","eage",
+                  "eageg","cohort1","cohort2","edtert1","edtert2","systm","diastm","chola","hdla")
+    monica <- read.fwf("data/form04_3.txt", widths = widths, col.names = colnames)
+
+    age_structure <- read.csv2(file = "data/vaesto_3112_2017.csv", header = TRUE)
+    sex_init = rbin(n)
+    mf <- age_structure[,2:3] 
+    age_structure[,2:3] <- mf / colSums(mf)[col(mf)]
+    age_init <- (sex_init == 0L) * sample(30:99, n, replace = TRUE, prob = age_structure[,2]) +
+                (sex_init == 1L) * sample(30:99, n, replace = TRUE, prob = age_structure[,3])
+    smoking <- sex_age_init(n, sex_init, age_init, c(0.319, 0.298, 0.278, 0.219, 0.109, 0.016), c(0.229, 0.193, 0.184, 0.147, 0.054, 0.016), 30, 80, 10)
+    diabetes <- sex_age_init(n, sex_init, age_init, c(0.012, 0.045, 0.110, 0.209, 0.244, 0.220), c(0.022, 0.032, 0.056, 0.126, 0.172, 0.204), 30, 80, 10)
+    parent_stroke <- rbin(n, prob = 0.131)
+    high_glucose <- sex_age_init(n, sex_init, age_init, c(0.013, 0.043, 0.080, 0.114, 0.128, 0.110), c(0.019, 0.012, 0.030, 0.055, 0.121, 0.093), 30, 80, 10)
+    stroke <- rep(0L, n)
+    age_at_stroke <- rep(0.0, n)
+
+    # decoding missing values
+    monica$height[monica$height == 999] <- NA
+    monica$weight[monica$weight == 9999] <- NA
+    monica$waist[monica$waist == 9999] <- NA
+    monica$systm[monica$systm == 9999] <- NA
+    monica$chol[monica$chol >= 888] <- NA
+    monica$hdl[monica$hdl >= 777] <- NA
+
+    # unit transformations
+    monica$weight <- monica$weight / 10 # transform to kg
+    monica$waist <- monica$waist / 10 # transform to cm
+    monica$systm <- monica$systm / 10 # transform to mmHg
+    monica$chol <- monica$chol / 10 # transform to mmol/l
+    monica$hdl <- monica$hdl / 100 # transform to mmol/l
+    monica$bmi <- monica$weight / (monica$height / 100)^2
+    monica$sex <- monica$sex - 1 # female = 1
+
+    selcol <- c("bmi", "waist", "chol", "hdl", "systm")
+    m <- length(selcol)
+    monica2 <- monica[,c("eage", "sex", selcol)]
+    out <- c(which.min(monica2$waist), which.max(monica2$chol)) # removing some outliers
+    monica2 <- monica2[-out,]
+    monica2$agegr <- as.numeric(cut(monica2$eage, breaks = c(0, 30, 40, 50, 60, 70), right = FALSE))
+
+    norm_grp <- expand.grid(sex = 0:1, agegr = 1:m)
+    k <- nrow(norm_grp)
+    norm_dat <- vector(mode = "list", length = k)
+    norm_par <- vector(mode = "list", length = k)
+
+    for (i in 1:k) {
+        ind <- monica2$sex == norm_grp[i,1] & monica2$agegr == norm_grp[i,2]
+        ind[is.na(ind)] <- FALSE
+        norm_par[[i]]$trans <- list()
+        norm_dat[[i]] <- matrix(0, sum(ind), m)
+        for (j in 1:m) {
+            bc <- bestNormalize::boxcox(monica2[ind,selcol[j]])
+            norm_par[[i]]$trans[[j]] <- bc
+            norm_dat[[i]][,j] <- bc$x.t
+        }
+        norm_par[[i]]$mu <- colMeans(norm_dat[[i]], na.rm = TRUE)
+        norm_par[[i]]$Sigma <- cov(norm_dat[[i]], use = "complete.obs")
+    }
+
+    X <- matrix(0, n, m)
+    age_init_mon <- as.numeric(cut(age_init, breaks = c(0, 30, 40, 50, 60, 100), right = FALSE))
+
+    for (i in 3:k) {
+        ind <- sex_init == norm_grp[i,1] & age_init_mon == norm_grp[i,2]
+        temp <- MASS::mvrnorm(sum(ind), mu = norm_par[[i]]$mu, Sigma = norm_par[[i]]$Sigma)
+        for (j in 1:m) {
+            temp[,j] <- predict(norm_par[[i]]$trans[[j]], temp[,j], inverse = TRUE)
+        }
+        X[ind,] <- temp
+    }
+
+    # Correct mean values to match the year 2017
+    age_init_grp <- as.numeric(cut(age_init, breaks = c(30, 40, 50, 60, 70, 80, 1000), right = FALSE))
+    gen_grp <- expand.grid(agegr = sort(unique(age_init_grp)), sex = 0:1)
+    gen_grp$bmi <- c(27.0, 27.6, 28.5, 28.1, 27.4, 27.2, 25.8, 27.1, 28.1, 28.2, 28.3, 28.3)
+    gen_grp$waist_circumference <- c(93.7, 97.4, 102.0, 103.1, 101.3, 100.3, 83.4, 87.8, 91.7, 92.9, 93.9, 93.8)
+    gen_grp$cholesterol <- rep(0, 12)
+    gen_grp$hdl_cholesterol <- rep(0, 12)
+    gen_grp$bp <- c(133, 133, 133, 133, 143, 143, 127, 127, 127, 127, 146, 146)
+    adjust <- c(1, 2, 5)
+    for (i in 1:nrow(gen_grp)) {
+         ind <- sex_init == gen_grp[i,1] & age_init_grp == gen_grp[i,2]
+         Y <- X[ind,adjust]
+         X[ind,adjust] <- Y - colMeans(Y)[col(Y)] + gen_grp[i,2 + adjust][col(Y)]
+    }
+
+    # Limits data to values that have been actually observed
+    bmi <- impose_limits(X[,1], c(16, 72.5))
+    waist_circumference <- impose_limits(X[,2], c(50, 152))
+    cholesterol <- impose_limits(X[,3], c(2.5, 11.5))
+    hdl_cholesterol <- impose_limits(X[,4], c(0.37, 3.62))
+    blood_pressure <- impose_limits(X[,5], c(78, 252))
+
+    return(data.table(
+        alive = rep(1L, n),
+        age = as.double(age_init),
+        age_at_start = as.double(age_init),
+        age_at_stroke = age_at_stroke,
+        sex = sex_init,
+        smoking = smoking,
+        diabetes = diabetes,
+        parent_stroke = parent_stroke,
+        high_glucose = high_glucose,
+        stroke = stroke,
+        bmi = bmi,
+        waist_circumference = waist_circumference,
+        cholesterol = cholesterol,
+        hdl_cholesterol = hdl_cholesterol,
+        blood_pressure = blood_pressure,
+        takes_bp_medicine = rep(0L, n),
+        id = 1:n
+    ))
+
+}
+```
+
+## Utility functions
+
+The file `DiabetesAndStrokeFunctions.R` provides a set of useful functions used in defining events and the initial data
+
+```{r, eval = FALSE}
+## Bernoulli distribution with probability of success (1) 'prob' (vectorized over prob)
+
+rbern <- function(prob) {
+    return(ifelse(dqrng::dqrunif(length(prob)) < prob, 1L, 0L))
+}
+
+## Uniformly random date between 'start' and 'end' dates (inclusive)
+
+rdate <- function(start, end, ...) {
+    return(sample(seq(as.Date(start), as.Date(end), by = "day"), ...))
+}
+
+## Random binary, where the probability of 1 is 'prob'
+
+rbin <- function(size, prob = 0.5) {
+    return(sample(c(0L, 1L), size = size, replace = TRUE, prob = c(1 - prob, prob)))
+}
+
+## The logistic link function
+
+logit <- function(x) log(x) - log(1 - x)
+
+## Inverse logistic link
+
+expit <- function(x) (1 + exp(-x))^(-1)
+
+## Function to generate binary starting values based on age-based proportions
+## n        : number of values to generate
+## sex      : vector of sex for each individual
+## age      : vector of ages (in years)
+## val_m    : proportions for males in each age group
+## val_f    : proportions for females in each age group
+## age_min  : youngest age group, no individual should have an age below this
+## age_max  : oldest distinct age group, ages above this are considered a single group
+## age_step : size of each age group
+
+sex_age_init <- function(n, sex, age, val_m, val_f, age_min, age_max, age_step) {
+    groups <- (age_max - age_min) %/% age_step + 1
+    age_group <- pmin((age - age_min) %/% age_step + 1, groups)
+    age_group[age_group < 1] <- NA
+    p <- (age_group > 0) * ((sex == 0) * val_m[age_group] + (sex == 1) * val_f[age_group])
+    p[is.na(p)] <- 0
+    return(rbinom(n, 1, p))
+}
+
+## Function to resample values within an allowed range
+## x      : a vector of values
+## limits : the range of allowed values
+
+impose_limits <- function(x, limits) {
+    out <- x < limits[1] | x > limits[2]
+    bound <- !out
+    x[out] <- sample(x[bound], sum(out), replace = TRUE)
+    return(x)
+}
+
+## Objective function to calibrate total mortality to mortality of the Finnish population
+## x : current vector of parameter values
+
+mortality_objective <- function(x) {
+    mortality <- read.csv(file = "data/kuol_007_201700.csv", header = TRUE, sep = ",")
+    mortality[,3] <- mortality[,3]/1000
+    n <- nrow(mortality)
+    mortality <- rbind(mortality, c(100, 2017, 2 * mortality[n,3] - mortality[n-1,3])) # Impute 100-year-olds from 99
+    p <- list("Other Mortality" = x[1:2])
+    out <- sim$configure(t_sim = 364, p = p, output_function = mortality_df, min_age = 30)
+    mortality <- mortality[mortality$Age %in% out$age_group,]
+    w <- rep(1, nrow(out))
+    w[out$age_group >= 80] <- 100 # Weight for mortalities >= 60, fit should be better here
+    valid <- (out[ ,2] != 0 & out[ ,1] != out[,2] & out[ ,1] != 0)
+    all_dead <- out[ ,1] == out[ ,2]
+    all_alive <- out[ ,1] == 0
+    obj <- sum(w[valid] * (log(mortality[valid,3]) - log(out[valid,1]/out[valid,2]))^2)
+    obj <- obj + sum(w[all_dead] * log(mortality[all_dead,3])^2)
+    obj <- obj + sum(w[all_alive] * log(mortality[all_alive,3])^2)
+    return(obj)
+}
+
+## A function used to calibrate total mortality
+## dt        : the status data.table
+## min_age   : the youngest age group
+
+mortality_df <- function(dt, min_age = 0) {
+    dt[ ,age_group := floor(age)]
+    deaths <- dt[alive == 0, .N, by = age_group]
+    size <- dt[ , .N, by = age_group]
+    groups <- 0:max(dt$age_group)
+    ages <- length(groups)
+    out <- data.frame(deaths = rep(0, ages), size = rep(0, ages), age_group = groups)
+    out[size$age_group + 1,"size"] <- size$N
+    if (any(deaths$N > 0)) {
+        out[deaths$age_group + 1,"deaths"] <- deaths$N
+    }
+    out <- out[out$age_group >= min_age, ]
+    return(out)
+}
+
+```
+

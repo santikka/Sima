@@ -56,7 +56,7 @@ Event <- R6::R6Class("Event",
         ##' @description
         ##' Get the current parameter values.
         get_parameters = function() {
-            return(priate$parameters)
+            return(private$parameters)
         },
 
         ##' @description
@@ -98,8 +98,10 @@ Event <- R6::R6Class("Event",
 
 )
 
-##' Class providing manipulation event functionality. Inherited from Event.
-##
+##' Class providing manipulation event functionality. 
+##' 
+##' @description
+##' Provides manipulation event functionality. Inherited from Event.
 ##' @docType class
 ##' @import data.table
 ##' @importFrom R6 R6Class
@@ -127,7 +129,9 @@ ManipulationEvent <- R6::R6Class("ManipulationEvent",
 )
 
 ##' Class providing accumulation event functionality. Inherited from Event.
-##
+##' 
+##' @description
+##' Provides accumulation event functionality. Inherited from Event.
 ##' @docType class
 ##' @import data.table
 ##' @importFrom R6 R6Class
@@ -145,6 +149,7 @@ AccumulationEvent <- R6::R6Class("AccumulationEvent",
         ##' @param status Current status of the simulated population.
         ##' @param living A logical vector indicating the individuals that are still alive.
         ##' @param parallel A logical value indicating if parallel computation is being used in simulation.
+        ##' @return A \code{\link{data.table}} with the new individuals added.
         apply = function(status, living, parallel) {
             par <- private$parameters
             new <- eval(private$mechanism)

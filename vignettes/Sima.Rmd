@@ -77,24 +77,36 @@ The arguments of the constructor are defined as follows:
 
 ## Calibration
 
-After defining the events and the initial population, the next task is typically to obtain parameter values for the events such that some measure of the synthetic population matches that of an external validation data set as closely as possible. To this end, events with parameters can be configured after initialization. Furthermore, it is possible to run multiple simulations with different parameter configurations while keeping the initial population intact and using the same seed values for the pseudo random number generation each time such that the any difference in output will be purely a result of the varying parameter values.
+After defining the events and the initial population, the next task is typically to obtain parameter values for the events such that some measure of the synthetic population matches that of an external validation data set as closely as possible. To this end, events with parameters can be configured after initialization. Furthermore, it is possible to run multiple simulations with different parameter configurations while keeping the initial population intact and using the same seed values for the pseudo random number generation each time such that the any difference in output will be purely a result of the varying parameter values. Standard R optimization tools such as `optim` can be used.
 
-The `Simulator` class method `calibrate` serves as a wrapper for using the standard R optimization tool `optim` for calibration.
+The `Simulator` class method `configure` makes it easy to run the simulation with different parameter values while keeping the initial population intact between runs.
 
 ```{r, eval = FALSE}
-Simulator$calibrate(t_sim, events, output, objective, inits, optim_args, auto = TRUE, ...)
+Simulator$calibrate(t_sim, p, output, seeds = 123, ...)
 ```
 
 The arguments for the method are as follows:
 
  - `t_sim` is the length of the simulation for a single function evaluation in the optimization. The value that should be used is highly dependent on target feature of the calibration, the objective function and the size of population.
- - `events` is a named list of manipulation events and accumulation events that are to be calibrated.
- - `output` is a statistic that should be computed from the synthetic population for each parameter configuration.
- - `objective` is the objective function used in optimization. The first argument of the function should accept the return value of of `output`. Typically this function compares a summary statistic from `output` against some external validation data.
- - `inits` is an optional named list of initial parameter values for each event. If no initial values are provided, the current values are used instead.
- - `optim_args` is a named list of additional arguments for `optim`.
- - `auto` is a logical value indicating whether the events should be automatically reconfigured if the optimization converges.
- - `...` gives additional arguments for `objective`.
+ - `p` is a named list of numeric vectors with names corresponding to the event names to be calibrated. The length of each element should be the same as the number of parameters that the event has.
+ - `output` is a function that is applied to the synthetic population after the simulation. The first argument should accept the status `data.table`.
+ - `seeds` are the seed values to use for random number generation.
+ - `...` are the additional arguments passed to output.
+
+For the standard `optim` function, the objective function to use and the calibration process itself take the following form
+```{r, eval = FALSE}
+obj_optim <- function(par, validation) {
+  p <- list("Event 1" = par[ind_1],
+            "Event 2" = par[ind_2],
+            ...
+            "Event n" = par[ind_n])
+  out <- sim$configure(t_sim, p, output)
+  return(objective(out, validation))
+}
+
+result <- optim(par = par_init, fn = obj_optim, validation = some_data)
+```
+Note that this is not actual usable R code, but simply a pseudo-code representation in R syntax, where the ellipsis simply denotes a list of `n` events. The idea is that the user has to define which event corresponds to which set of parameter indices, for example, event named "Event 1" is assigned parameters from `par` at `ind_1`. The indices should be disjoint. Next, the `configure` method is used to compute a summary statistics from the synthetic population. This is then compared to a set of validation data, provided in `validation` by the actual objective function, denoted here by `objective`. For other functions beside `optim`, alternate formulations will likely have to be used. See the `vignette("example")` for a practical demonstration of the entire calibration process.
  
 ## Running the simulator
 

@@ -3,14 +3,12 @@
 \docType{class}
 \name{ManipulationEvent}
 \alias{ManipulationEvent}
-\title{Class providing manipulation event functionality. Inherited from Event.}
+\title{Class providing manipulation event functionality.}
 \value{
 Object of \code{\link{R6Class}} ManipulationEvent.
 }
 \description{
-Class providing manipulation event functionality. Inherited from Event.
-
-Class providing manipulation event functionality. Inherited from Event.
+Provides manipulation event functionality. Inherited from Event.
 }
 \section{Super class}{
 \code{\link[Sima:Event]{Sima::Event}} -> \code{ManipulationEvent}

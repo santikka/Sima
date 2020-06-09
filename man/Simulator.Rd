@@ -56,7 +56,7 @@ Create a new Simulator object.
 \if{html}{\out{</div>}}
 }
 \subsection{Returns}{
-A new 'Simulator' object.
+A new \code{\link{Simulator}} object.
 }
 }
 \if{html}{\out{<hr>}}
@@ -136,7 +136,7 @@ Configure the parameters of Event objects.
 \subsection{Method \code{configure()}}{
 Configure events, run a simulation and compute a summary statistic for calibration. The original status is restored after completion.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Simulator$configure(t_sim, unit = "day", p, seeds = 123, output_function, ...)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{Simulator$configure(t_sim, p, output, seeds = 123, ...)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -144,15 +144,13 @@ Configure events, run a simulation and compute a summary statistic for calibrati
 \describe{
 \item{\code{t_sim}}{A numeric value indicating the length of time to process.}
 
-\item{\code{unit}}{A character string giving the time unit that \code{t_sim} corresponds to.}
-
 \item{\code{p}}{A list of parameter values. The names of the list should match the Event object names to be configured.}
+
+\item{\code{output}}{A function that computes a summary statistic from the simulation.}
 
 \item{\code{seeds}}{Seed values for random number generation.}
 
-\item{\code{output_function}}{A function that computes a summary statistic from the simulation.}
-
-\item{\code{...}}{Additional arguments passed to \code{output_function}.}
+\item{\code{...}}{Additional arguments passed to \code{output}.}
 }
 \if{html}{\out{</div>}}
 }
