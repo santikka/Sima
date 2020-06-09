@@ -1,5 +1,5 @@
 
-# Simulator Framework
+# Simulation Framework
 
 A simulation framework for large-scale data generation in the health
 care domain. The work is a part of the DEMO project

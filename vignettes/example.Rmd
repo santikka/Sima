@@ -245,8 +245,10 @@ get_stroke <- ManipulationEvent$new(
     mechanism = expression({
         subset_male   <- status[living & stroke == 0L & sex == 0L, which = TRUE]
         subset_female <- status[living & stroke == 0L & sex == 1L, which = TRUE]
-        X_male   <- as.matrix(status[subset_male,   .(const = 1, age, smoking, blood_pressure, hdl_cholesterol, diabetes, parent_stroke)])
-        X_female <- as.matrix(status[subset_female, .(const = 1, age, smoking, blood_pressure, hdl_cholesterol, diabetes, parent_stroke)])
+        X_male   <- as.matrix(status[subset_male,   .(const = 1, age, smoking, blood_pressure,
+                                                      hdl_cholesterol, diabetes, parent_stroke)])
+        X_female <- as.matrix(status[subset_female, .(const = 1, age, smoking, blood_pressure, 
+                                                      hdl_cholesterol, diabetes, parent_stroke)])
 
         # Compute 1 day risk from 10 year risk by assuming a Poisson process.
         prob_male_10year   <- 1 - pmin(expit( (X_male %*% par[1:7])[ ,1] ), 1)
@@ -300,7 +302,8 @@ stroke_mortality <- ManipulationEvent$new(
     description = "Death due to stroke",
     parameters = c(8.1748187, -9.5942954, -0.2828828), 
     mechanism = expression({
-        status[living & stroke == 1L, alive := rbern(ifelse(age - age_at_stroke < 28.0 / 365.0, 0.72 ^ (1 / 28), expit(par[1] + par[2] * exp(((age - age_at_stroke) * 365 - 27) * par[3]))))]
+        status[living & stroke == 1L, alive := rbern(ifelse(age - age_at_stroke < 28.0 / 365.0, 
+            0.72 ^ (1 / 28), expit(par[1] + par[2] * exp(((age - age_at_stroke) * 365 - 27) * par[3]))))]
     })
 )
 
@@ -309,7 +312,8 @@ bp_medication <- ManipulationEvent$new(
     description = "Blood pressure medication",
     parameters = c(140),
     mechanism = expression({
-        status[living & blood_pressure >= par[1] & takes_bp_medicine == 0L, `:=` (takes_bp_medicine = 1L, blood_pressure = blood_pressure - 5)]
+        status[living & blood_pressure >= par[1] & takes_bp_medicine == 0L, 
+               `:=` (takes_bp_medicine = 1L, blood_pressure = blood_pressure - 5)]
     })
 )
 
@@ -347,10 +351,13 @@ initializer <- function(n) {
     age_structure[,2:3] <- mf / colSums(mf)[col(mf)]
     age_init <- (sex_init == 0L) * sample(30:99, n, replace = TRUE, prob = age_structure[,2]) +
                 (sex_init == 1L) * sample(30:99, n, replace = TRUE, prob = age_structure[,3])
-    smoking <- sex_age_init(n, sex_init, age_init, c(0.319, 0.298, 0.278, 0.219, 0.109, 0.016), c(0.229, 0.193, 0.184, 0.147, 0.054, 0.016), 30, 80, 10)
-    diabetes <- sex_age_init(n, sex_init, age_init, c(0.012, 0.045, 0.110, 0.209, 0.244, 0.220), c(0.022, 0.032, 0.056, 0.126, 0.172, 0.204), 30, 80, 10)
+    smoking <- sex_age_init(n, sex_init, age_init, c(0.319, 0.298, 0.278, 0.219, 0.109, 0.016),
+                            c(0.229, 0.193, 0.184, 0.147, 0.054, 0.016), 30, 80, 10)
+    diabetes <- sex_age_init(n, sex_init, age_init, c(0.012, 0.045, 0.110, 0.209, 0.244, 0.220), 
+                             c(0.022, 0.032, 0.056, 0.126, 0.172, 0.204), 30, 80, 10)
     parent_stroke <- rbin(n, prob = 0.131)
-    high_glucose <- sex_age_init(n, sex_init, age_init, c(0.013, 0.043, 0.080, 0.114, 0.128, 0.110), c(0.019, 0.012, 0.030, 0.055, 0.121, 0.093), 30, 80, 10)
+    high_glucose <- sex_age_init(n, sex_init, age_init, c(0.013, 0.043, 0.080, 0.114, 0.128, 0.110), 
+                                 c(0.019, 0.012, 0.030, 0.055, 0.121, 0.093), 30, 80, 10)
     stroke <- rep(0L, n)
     age_at_stroke <- rep(0.0, n)
 
@@ -413,7 +420,8 @@ initializer <- function(n) {
     age_init_grp <- as.numeric(cut(age_init, breaks = c(30, 40, 50, 60, 70, 80, 1000), right = FALSE))
     gen_grp <- expand.grid(agegr = sort(unique(age_init_grp)), sex = 0:1)
     gen_grp$bmi <- c(27.0, 27.6, 28.5, 28.1, 27.4, 27.2, 25.8, 27.1, 28.1, 28.2, 28.3, 28.3)
-    gen_grp$waist_circumference <- c(93.7, 97.4, 102.0, 103.1, 101.3, 100.3, 83.4, 87.8, 91.7, 92.9, 93.9, 93.8)
+    gen_grp$waist_circumference <- c(93.7, 97.4, 102.0, 103.1, 101.3, 100.3,
+                                     83.4, 87.8, 91.7, 92.9, 93.9, 93.8)
     gen_grp$cholesterol <- rep(0, 12)
     gen_grp$hdl_cholesterol <- rep(0, 12)
     gen_grp$bp <- c(133, 133, 133, 133, 143, 143, 127, 127, 127, 127, 146, 146)
@@ -522,7 +530,8 @@ mortality_objective <- function(x) {
     mortality <- read.csv(file = "data/kuol_007_201700.csv", header = TRUE, sep = ",")
     mortality[,3] <- mortality[,3]/1000
     n <- nrow(mortality)
-    mortality <- rbind(mortality, c(100, 2017, 2 * mortality[n,3] - mortality[n-1,3])) # Impute 100-year-olds from 99
+    # Impute 100-year-olds from 99
+    mortality <- rbind(mortality, c(100, 2017, 2 * mortality[n,3] - mortality[n-1,3])) 
     p <- list("Other Mortality" = x[1:2])
     out <- sim$configure(t_sim = 364, p = p, output_function = mortality_df, min_age = 30)
     mortality <- mortality[mortality$Age %in% out$age_group,]
