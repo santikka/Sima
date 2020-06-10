@@ -44,6 +44,10 @@ The contents of these scripts are also listed in the following sections for dire
 The file `DiabetesAndStroke.R` provides the code to run the entire example
 
 ```{r, eval = FALSE}
+# Uncomment to install packages
+# install.packages(c("data.table", "ggplot2", "bestNormalize", "devtools"))
+# devtools::install_github("santikk/Sima")
+
 library(Sima)
 library(data.table)
 library(ggplot2)
@@ -101,17 +105,17 @@ sim <- Simulator$new(
 # Calibration #
 ###############
 
-## Uncomment to enable a parallel cluster for remaining computations
-#if (require(doParallel)) {
-#   nc <- parallel::detectCores()
-#   cl <- parallel::makeCluster(nc)
-#   doParallel::registerDoParallel(cl)
-#   ## User made functions/objects have to be manually exported, list them in 'export'
-#   sim$start_cluster(cl, nc, export = c("logit", "expit", "rbern"))
-#}
+# Uncomment to enable a parallel cluster for remaining computations
+# if (require(doParallel)) {
+#    nc <- parallel::detectCores()
+#    cl <- parallel::makeCluster(nc)
+#    doParallel::registerDoParallel(cl)
+#    ## User made functions/objects have to be manually exported, list them in 'export'
+#    sim$start_cluster(cl, nc, export = c("logit", "expit", "rbern"))
+# }
 
 # Uncomment to perform calibration
-#calib_result <- optim(c(18, 140), mortality_objective, method = "Nelder-Mead")
+# calib_result <- optim(c(18, 140), mortality_objective, method = "Nelder-Mead")
 
 # Using a population of 1 million individuals, the following optimum is found:
 # c(14.10523, 158.18299)
@@ -175,13 +179,13 @@ dropout <- function(dt) {
 drop_start <- dropout(sim_sample$get_population())
 
 # Uncomment to enable a parallel cluster for remaining computations
-#if (require(doParallel)) {
-#    nc <- parallel::detectCores()
-#    cl <- parallel::makeCluster(nc)
-#    doParallel::registerDoParallel(cl)
-#    ## User made functions/objects have to be manually exported, list them in 'export'
-#    sim_sample$start_cluster(cl, nc, export = c("expit", "logit", "rbern"))
-#}
+# if (require(doParallel)) {
+#     nc <- parallel::detectCores()
+#     cl <- parallel::makeCluster(nc)
+#     doParallel::registerDoParallel(cl)
+#     ## User made functions/objects have to be manually exported, list them in 'export'
+#     sim_sample$start_cluster(cl, nc, export = c("expit", "logit", "rbern"))
+# }
 
 sim_sample$run(365)
 sim_sample$stop_cluster()
