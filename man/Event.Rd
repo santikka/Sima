@@ -75,7 +75,12 @@ Set the parameter values of the event.
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{parameters}}{A numeric vector giving the parameter values to set.}
+\item{\code{parameters}}{can be one of the following:
+A numeric vector giving the parameter values to set, or
+A named numeric vector with names corresponding
+to specific parameters to set, or a list with two elements
+where the first element gives the values and the second
+element gives the positions to set}
 }
 \if{html}{\out{</div>}}
 }

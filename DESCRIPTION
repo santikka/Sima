@@ -1,7 +1,7 @@
 Package: Sima
 Title: Simulation Framework for Large-scale Individual Level Health Data Generation
-Version: 0.5.0
-Date: 2020-06-08
+Version: 0.5.1
+Date: 2020-06-18
 Authors@R: c(
     person(given = "Santtu",
            family = "Tikka",

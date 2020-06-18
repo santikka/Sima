@@ -125,10 +125,18 @@ Configure the parameters of Event objects.
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{p}}{A list of parameter values. The names of the list should match the Event object names to be configured.}
+\item{\code{p}}{A named list of parameters, see 'details'.}
 }
 \if{html}{\out{</div>}}
 }
+\subsection{Details}{
+The parameter list \code{p} should be structured as follows:
+Each element should be named with a name of an event object.
+Each element should be a list with two elements, one with
+the parameters values and the second of equal length
+giving the indices which to replace.
+}
+
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-configure"></a>}}
@@ -144,7 +152,7 @@ Configure events, run a simulation and compute a summary statistic for calibrati
 \describe{
 \item{\code{t_sim}}{A numeric value indicating the length of time to process.}
 
-\item{\code{p}}{A list of parameter values. The names of the list should match the Event object names to be configured.}
+\item{\code{p}}{A list of parameter values, see 'details'.}
 
 \item{\code{output}}{A function that computes a summary statistic from the simulation.}
 
@@ -154,6 +162,14 @@ Configure events, run a simulation and compute a summary statistic for calibrati
 }
 \if{html}{\out{</div>}}
 }
+\subsection{Details}{
+The parameter list \code{p} should be structured as follows:
+Each element should be named with a name of an event object.
+Each element should be a list with two elements, one with
+the parameters values and the second of equal length
+giving the indices which to replace.
+}
+
 \subsection{Returns}{
 The output of \code{output_function} evaluated for the resulting population.
 }

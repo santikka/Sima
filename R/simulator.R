@@ -239,7 +239,13 @@ Simulator <- R6::R6Class("Simulator",
 
         ##' @description
         ##' Configure the parameters of Event objects.
-        ##' @param p A list of parameter values. The names of the list should match the Event object names to be configured.
+        ##' @param p A named list of parameters, see 'details'.
+        ##' @details 
+        ##' The parameter list \code{p} should be structured as follows:
+        ##' Each element should be named with a name of an event object.
+        ##' Each element should be a list with two elements, one with
+        ##' the parameters values and the second of equal length
+        ##' giving the indices which to replace.
         reconfigure = function(p) {
             for (n in names(p)) {
                 private$unlisted_events[[private$settings$event_indices[[n]]]]$set_parameters(p[[n]])
@@ -253,11 +259,17 @@ Simulator <- R6::R6Class("Simulator",
         ##' @description
         ##' Configure events, run a simulation and compute a summary statistic for calibration. The original status is restored after completion.
         ##' @param t_sim A numeric value indicating the length of time to process.
-        ##' @param p A list of parameter values. The names of the list should match the Event object names to be configured.
+        ##' @param p A list of parameter values, see 'details'.
         ##' @param output A function that computes a summary statistic from the simulation.
         ##' @param seeds Seed values for random number generation.
         ##' @param ... Additional arguments passed to \code{output}.
         ##' @return The output of \code{output_function} evaluated for the resulting population.
+        ##' @details 
+        ##' The parameter list \code{p} should be structured as follows:
+        ##' Each element should be named with a name of an event object.
+        ##' Each element should be a list with two elements, one with
+        ##' the parameters values and the second of equal length
+        ##' giving the indices which to replace.
         configure = function(t_sim, p, output, seeds = 123, ...) {
             if (length(private$history) > 0) warning("Previous simulation history was overwritten by calibration")
             if (!is.numeric(seeds)) stop("Seed values must be numeric")

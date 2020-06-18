@@ -48,9 +48,28 @@ Event <- R6::R6Class("Event",
 
         ##' @description
         ##' Set the parameter values of the event.
-        ##' @param parameters A numeric vector giving the parameter values to set.
+        ##' @param parameters can be one of the following: 
+        ##' A numeric vector giving the parameter values to set, or
+        ##' A named numeric vector with names corresponding 
+        ##' to specific parameters to set, or a list with two elements
+        ##' where the first element gives the values and the second
+        ##' element gives the positions to set
         set_parameters = function(parameters) {
-            private$parameters <- parameters
+            if (is.list(parameters)) {
+                if (length(parameters[[1]]) > length(parameters[[2]])) stop("Attempted to set less parameters than what were given")
+                if (length(parameters[[1]]) < length(parameters[[2]])) stop("Attempted to set more parameters than what were given")
+                private$parameters[parameters[[2]]] <- parameters[[1]]
+            } else {
+                if (is.numeric(parameters)) {
+                    if (!is.null(names(parameters))) {
+                        if (is.null(names(private$parameters))) stop("Event parameters are not named")
+                        if (!all(names(parameters)) %in% names(private$parameters)) stop("Invalid parameter names")
+                        private$parameters[names(parameters)] <- parameters
+                    } else {
+                        private$parameters <- parameters
+                    }
+                }
+            }
         },
 
         ##' @description
