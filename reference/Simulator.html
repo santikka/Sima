@@ -72,7 +72,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">Sima</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.5.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.5.1</span>
       </span>
     </div>
 
@@ -222,9 +222,16 @@
 
 <h3>Arguments</h3>
 <p><div class="arguments"></p><dl'>
-<dt><code>p</code></dt><dd><p>A list of parameter values. The names of the list should match the Event object names to be configured.</p></dd>
+<dt><code>p</code></dt><dd><p>A named list of parameters, see 'details'.</p></dd>
 
 </dl><p></div></p>
+<h3>Details</h3>
+<p>The parameter list <code>p</code> should be structured as follows:
+Each element should be named with a name of an event object.
+Each element should be a list with two elements, one with
+the parameters values and the second of equal length
+giving the indices which to replace.</p>
+
 <p><hr>
 <a id="method-configure"></a></p><h3>Method <code>configure()</code></h3>
 <p>Configure events, run a simulation and compute a summary statistic for calibration. The original status is restored after completion.</p><h3>Usage</h3>
@@ -234,7 +241,7 @@
 <p><div class="arguments"></p><dl'>
 <dt><code>t_sim</code></dt><dd><p>A numeric value indicating the length of time to process.</p></dd>
 
-<dt><code>p</code></dt><dd><p>A list of parameter values. The names of the list should match the Event object names to be configured.</p></dd>
+<dt><code>p</code></dt><dd><p>A list of parameter values, see 'details'.</p></dd>
 
 <dt><code>output</code></dt><dd><p>A function that computes a summary statistic from the simulation.</p></dd>
 
@@ -243,6 +250,13 @@
 <dt><code>...</code></dt><dd><p>Additional arguments passed to <code>output</code>.</p></dd>
 
 </dl><p></div></p>
+<h3>Details</h3>
+<p>The parameter list <code>p</code> should be structured as follows:
+Each element should be named with a name of an event object.
+Each element should be a list with two elements, one with
+the parameters values and the second of equal length
+giving the indices which to replace.</p>
+
 <h3>Returns</h3>
 <p>The output of <code>output_function</code> evaluated for the resulting population.</p>
 <p><hr>

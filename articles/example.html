@@ -32,7 +32,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">Sima</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.5.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.5.1</span>
       </span>
     </div>
 
@@ -129,7 +129,12 @@
 <h2 class="hasAnchor">
 <a href="#main-script" class="anchor"></a>Main script</h2>
 <p>The file <code>DiabetesAndStroke.R</code> provides the code to run the entire example</p>
-<div class="sourceCode" id="cb1"><html><body><pre class="r"><span class="co"># Uncomment to install packages</span>
+<div class="sourceCode"><html><body><pre class="r"><span class="co"># An example use case of the simulator for </span>
+<span class="co"># modelling the occurrence of diabetes and stroke</span>
+<span class="co"># in a synthetic population with Finnish population</span>
+<span class="co"># characteristics in the year 2017.</span>
+
+<span class="co"># Uncomment to install packages</span>
 <span class="co"># install.packages(c("data.table", "ggplot2", "bestNormalize", "devtools"))</span>
 <span class="co"># devtools::install_github("santikk/Sima")</span>
 
@@ -137,7 +142,8 @@
 <span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="no">data.table</span>)
 <span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="no">ggplot2</span>)
 
-<span class="co"># The path should be set to the location of the R-scripts, such that</span>
+
+<span class="co"># The file_path should be set to the location of the R-scripts, such that</span>
 <span class="co"># the data-directory is present in this location</span>
 
 <span class="no">file_path</span> <span class="kw">&lt;-</span> <span class="st">""</span>
@@ -190,7 +196,7 @@
 <span class="co"># Calibration #</span>
 <span class="co">###############</span>
 
-<span class="co"># Uncomment to enable a parallel cluster for remaining computations</span>
+<span class="co">## Uncomment to enable a parallel cluster for remaining computations</span>
 <span class="co"># if (require(doParallel)) {</span>
 <span class="co">#    nc &lt;- parallel::detectCores()</span>
 <span class="co">#    cl &lt;- parallel::makeCluster(nc)</span>
@@ -200,13 +206,14 @@
 <span class="co"># }</span>
 
 <span class="co"># Uncomment to perform calibration</span>
-<span class="co"># calib_result &lt;- optim(c(18, 140), mortality_objective, method = "Nelder-Mead")</span>
+<span class="co">#calib_result &lt;- optim(c(18, 140), mortality_objective, method = "Nelder-Mead")</span>
 
 <span class="co"># Using a population of 1 million individuals, the following optimum is found:</span>
-<span class="co"># c(14.10523, 158.18299)</span>
+<span class="co"># c(13.51056, 161.12780, 5.41859)</span>
 
 <span class="co"># Configure the simulator to use the optimal parameters (if calibration not run)</span>
-<span class="no">sim</span>$<span class="fu">reconfigure</span>(<span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span>(<span class="st">"Other Mortality"</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="fl">14.10523</span>, <span class="fl">158.18299</span>)))
+<span class="co"># Here, only 1st parameter is configured for stroke mortality</span>
+<span class="no">sim</span>$<span class="fu">reconfigure</span>(<span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span>(<span class="st">"Other Mortality"</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="fl">13.51056</span>, <span class="fl">161.12780</span>), <span class="st">"Stroke Mortality"</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span>(<span class="fl">5.41859</span>, <span class="fl">1</span>)))
 
 <span class="co"># Visualize and compare simulated mortality to official statistics</span>
 <span class="no">sim</span>$<span class="fu">run</span>(<span class="fl">364</span>)
@@ -216,71 +223,86 @@
 <span class="no">mortality</span>[,<span class="fl">3</span>] <span class="kw">&lt;-</span> <span class="no">mortality</span>[,<span class="fl">3</span>]/<span class="fl">1000</span>
 <span class="no">n</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/nrow.html">nrow</a></span>(<span class="no">mortality</span>)
 <span class="no">mortality</span> <span class="kw">&lt;-</span> <span class="no">mortality</span>[<span class="no">mortality</span>$<span class="no">Age</span> <span class="kw">&gt;=</span> <span class="fl">30</span>,]
-<span class="no">sim_mortality</span> <span class="kw">&lt;-</span> <span class="fu">mortality_df</span>(<span class="no">sim</span>$<span class="fu">get_population</span>(), <span class="kw">min_age</span> <span class="kw">=</span> <span class="fl">30</span>)
+<span class="no">calib_result</span> <span class="kw">&lt;-</span> <span class="fu">mortality_df</span>(<span class="no">sim</span>$<span class="fu">get_population</span>(), <span class="kw">min_age</span> <span class="kw">=</span> <span class="fl">30</span>)
+<span class="no">sim_mortality</span> <span class="kw">&lt;-</span> <span class="no">calib_result</span>$<span class="no">out</span>
+
+<span class="co"># Proportion of fatal stroke deaths of all deaths</span>
+<span class="no">sim_stroke</span> <span class="kw">&lt;-</span> <span class="no">calib_result</span>$<span class="no">stroke_prop</span>
 
 <span class="no">df</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html">data.frame</a></span>(<span class="kw">age</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html">rep</a></span>(<span class="no">sim_mortality</span>$<span class="no">age_group</span>, <span class="fl">2</span>),
                  <span class="kw">mortality</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="no">sim_mortality</span>$<span class="no">deaths</span>/<span class="no">sim_mortality</span>$<span class="no">size</span>, <span class="no">mortality</span>[,<span class="fl">3</span>]),
                  <span class="kw">group</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/gl.html">gl</a></span>(<span class="fl">2</span>, <span class="fu"><a href="https://rdrr.io/r/base/nrow.html">nrow</a></span>(<span class="no">mortality</span>), <span class="kw">labels</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="st">"Simulated"</span>, <span class="st">"Reported"</span>)))
 
 <span class="co"># Plot comparing mortality in the synthetic population to the official statistics</span>
-<span class="no">g</span> <span class="kw">&lt;-</span> <span class="fu">ggplot</span>(<span class="no">df</span>, <span class="fu">aes</span>(<span class="kw">x</span> <span class="kw">=</span> <span class="no">age</span>, <span class="kw">y</span> <span class="kw">=</span> <span class="no">mortality</span>, <span class="kw">linetype</span> <span class="kw">=</span> <span class="no">group</span>)) +
-    <span class="fu">geom_line</span>(<span class="kw">lwd</span> <span class="kw">=</span> <span class="fl">0.5</span>) +
-    <span class="fu">theme_bw</span>(<span class="kw">base_size</span> <span class="kw">=</span> <span class="fl">14</span>) +
-    <span class="fu">theme</span>(
-        <span class="kw">legend.position</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="fl">0.2</span>, <span class="fl">0.82</span>),
-        <span class="kw">legend.key.width</span> <span class="kw">=</span> <span class="fu">unit</span>(<span class="fl">1.75</span>, <span class="st">"cm"</span>),
-        <span class="kw">legend.key.size</span> <span class="kw">=</span> <span class="fu">unit</span>(<span class="fl">1.5</span>, <span class="st">"line"</span>),
-        <span class="kw">legend.text</span> <span class="kw">=</span> <span class="fu">element_text</span>(<span class="kw">size</span> <span class="kw">=</span> <span class="fl">14</span>),
-        <span class="kw">legend.background</span> <span class="kw">=</span> <span class="fu">element_rect</span>(<span class="kw">fill</span> <span class="kw">=</span> <span class="st">"white"</span>, <span class="kw">size</span> <span class="kw">=</span> <span class="fl">2</span>, <span class="kw">linetype</span> <span class="kw">=</span> <span class="st">"solid"</span>)
+<span class="no">g</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html">ggplot</a></span>(<span class="no">df</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html">aes</a></span>(<span class="kw">x</span> <span class="kw">=</span> <span class="no">age</span>, <span class="kw">y</span> <span class="kw">=</span> <span class="no">mortality</span>, <span class="kw">linetype</span> <span class="kw">=</span> <span class="no">group</span>)) +
+    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_path.html">geom_line</a></span>(<span class="kw">lwd</span> <span class="kw">=</span> <span class="fl">0.5</span>) +
+    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html">theme_bw</a></span>(<span class="kw">base_size</span> <span class="kw">=</span> <span class="fl">16</span>) +
+    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme.html">theme</a></span>(
+        <span class="kw">legend.position</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="fl">0.190</span>, <span class="fl">0.85</span>),
+        <span class="kw">legend.key.width</span> <span class="kw">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/reexports.html">unit</a></span>(<span class="fl">1.75</span>, <span class="st">"cm"</span>),
+        <span class="kw">legend.key.size</span> <span class="kw">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/reexports.html">unit</a></span>(<span class="fl">1.5</span>, <span class="st">"line"</span>),
+        <span class="kw">legend.text</span> <span class="kw">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html">element_text</a></span>(<span class="kw">size</span> <span class="kw">=</span> <span class="fl">14</span>),
+        <span class="kw">plot.margin</span> <span class="kw">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/reexports.html">unit</a></span>(<span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="fl">5.5</span>, <span class="fl">12</span>, <span class="fl">5.5</span>, <span class="fl">5.5</span>), <span class="st">"points"</span>),
+        <span class="kw">legend.background</span> <span class="kw">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html">element_rect</a></span>(<span class="kw">fill</span> <span class="kw">=</span> <span class="st">"white"</span>, <span class="kw">size</span> <span class="kw">=</span> <span class="fl">2</span>, <span class="kw">linetype</span> <span class="kw">=</span> <span class="st">"solid"</span>)
     ) +
-    <span class="fu">scale_x_continuous</span>(<span class="kw">limits</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="fl">30</span>, <span class="fl">100</span>), <span class="kw">breaks</span> <span class="kw">=</span> <span class="fl">3</span>:<span class="fl">10</span> * <span class="fl">10</span>) +
-    <span class="fu">scale_y_continuous</span>(<span class="kw">limits</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="fl">0</span>, <span class="fl">0.45</span>)) +
-    <span class="fu">scale_linetype_manual</span>(<span class="kw">name</span> <span class="kw">=</span> <span class="kw">NULL</span>, <span class="kw">values</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="st">"longdash"</span>, <span class="st">"solid"</span>)) +
-    <span class="fu">labs</span>(<span class="kw">x</span> <span class="kw">=</span> <span class="st">"Age"</span>, <span class="kw">y</span> <span class="kw">=</span> <span class="st">"Mortality"</span>, <span class="kw">title</span> <span class="kw">=</span> <span class="kw">NULL</span>)
+    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_continuous.html">scale_x_continuous</a></span>(<span class="kw">limits</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="fl">30</span>, <span class="fl">100</span>), <span class="kw">breaks</span> <span class="kw">=</span> <span class="fl">3</span>:<span class="fl">10</span> * <span class="fl">10</span>, <span class="kw">expand</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="fl">0</span>,<span class="fl">0</span>)) +
+    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_continuous.html">scale_y_continuous</a></span>(<span class="kw">limits</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="fl">0</span>, <span class="fl">0.4</span>), <span class="kw">expand</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="fl">0.025</span>, <span class="fl">0</span>)) +
+    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_manual.html">scale_linetype_manual</a></span>(<span class="kw">name</span> <span class="kw">=</span> <span class="kw">NULL</span>, <span class="kw">values</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="st">"longdash"</span>, <span class="st">"solid"</span>)) +
+    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html">labs</a></span>(<span class="kw">x</span> <span class="kw">=</span> <span class="st">"Age"</span>, <span class="kw">y</span> <span class="kw">=</span> <span class="st">"Mortality"</span>, <span class="kw">title</span> <span class="kw">=</span> <span class="kw">NULL</span>)
 <span class="no">g</span>
 
 <span class="co">######################</span>
 <span class="co"># Selective sampling #</span>
 <span class="co">######################</span>
 
-<span class="co"># Create a smaller population corresponding to the target sample</span>
+<span class="co"># Create a smaller sub population corresponding to the target sample </span>
+<span class="co"># (increase population size to 3.6 million to include the </span>
+<span class="co">#  entire population in the following comparisions [pop])</span>
 <span class="no">sim_sample</span> <span class="kw">&lt;-</span> <span class="no">Simulator</span>$<span class="fu">new</span>(
     <span class="kw">initializer</span> <span class="kw">=</span> <span class="no">initializer</span>,
     <span class="kw">manipulation_events</span> <span class="kw">=</span> <span class="no">all_events</span>,
     <span class="kw">time</span> <span class="kw">=</span> <span class="no">Time</span>$<span class="fu">new</span>(<span class="kw">unit</span> <span class="kw">=</span> <span class="st">"day"</span>, <span class="kw">start</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Sys.time.html">Sys.Date</a></span>()),
     <span class="kw">seeds</span> <span class="kw">=</span> <span class="fl">242</span>,
-    <span class="kw">n</span> <span class="kw">=</span> <span class="fl">1e5</span>
+    <span class="kw">n</span> <span class="kw">=</span> <span class="fl">1e4</span>
 )
 
-<span class="co">## Configure the simulator to use the optimal parameters</span>
-<span class="no">sim_sample</span>$<span class="fu">reconfigure</span>(<span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span>(<span class="st">"Other Mortality"</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="fl">14.10523</span>, <span class="fl">158.18299</span>)))
+<span class="co"># Configure the simulator to use the optimal parameters</span>
+<span class="co"># Here, only 1st parameter is configured for stroke mortality</span>
+<span class="no">sim_sample</span>$<span class="fu">reconfigure</span>(<span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span>(<span class="st">"Other Mortality"</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="fl">13.51056</span>, <span class="fl">161.12780</span>), <span class="st">"Stroke Mortality"</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span>(<span class="fl">5.41859</span>, <span class="fl">1</span>)))
 
-<span class="no">dropout</span> <span class="kw">&lt;-</span> <span class="kw">function</span>(<span class="no">dt</span>) {
-    <span class="no">beta</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(-<span class="fl">9.172640</span>, -<span class="fl">0.311690</span>, <span class="fl">0.113614</span>, -<span class="fl">0.090696</span>, <span class="fl">0.036383</span>, <span class="fl">0.689770</span>)
+<span class="no">missingness</span> <span class="kw">&lt;-</span> <span class="kw">function</span>(<span class="no">dt</span>) {
+    <span class="no">beta</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(-<span class="fl">9.484330</span>, -<span class="fl">0.311690</span>, <span class="fl">0.113614</span>, -<span class="fl">0.090696</span>, <span class="fl">0.036383</span>, <span class="fl">0.689770</span>)
     <span class="no">X</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://Rdatatable.gitlab.io/data.table/reference/as.matrix.html">as.matrix</a></span>(<span class="no">dt</span>[ ,<span class="fu">.</span>(<span class="kw">const</span> <span class="kw">=</span> <span class="fl">1</span>, <span class="no">sex</span>, <span class="no">age</span>, <span class="no">bmi</span>, <span class="no">waist_circumference</span>, <span class="no">smoking</span>)])
     <span class="fu"><a href="https://rdrr.io/r/base/function.html">return</a></span>(<span class="fu">rbern</span>(<span class="fu">expit</span>(<span class="fu"><a href="https://rdrr.io/r/base/numeric.html">as.numeric</a></span>(<span class="no">X</span> <span class="kw">%*%</span> <span class="no">beta</span>))))
 }
 
-<span class="no">drop_start</span> <span class="kw">&lt;-</span> <span class="fu">dropout</span>(<span class="no">sim_sample</span>$<span class="fu">get_population</span>())
+<span class="no">pop</span> <span class="kw">&lt;-</span> <span class="kw pkg">data.table</span><span class="kw ns">::</span><span class="fu"><a href="https://Rdatatable.gitlab.io/data.table/reference/copy.html">copy</a></span>(<span class="no">sim_sample</span>$<span class="fu">get_population</span>())
+<span class="no">m</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html">min</a></span>(<span class="fl">1e4</span>, <span class="fu"><a href="https://rdrr.io/r/base/nrow.html">nrow</a></span>(<span class="no">pop</span>))
+<span class="no">baseline_sample</span> <span class="kw">&lt;-</span> <span class="no">pop</span>$<span class="no">id</span> <span class="kw">%in%</span> <span class="fu"><a href="https://rdrr.io/r/base/sample.html">sample</a></span>(<span class="fl">1</span>:<span class="no">m</span>, <span class="no">m</span>, <span class="kw">replace</span> <span class="kw">=</span> <span class="fl">FALSE</span>)
+<span class="no">baseline_nonresp</span> <span class="kw">&lt;-</span> <span class="fu">missingness</span>(<span class="no">pop</span>[<span class="no">baseline_sample</span>,])
+<span class="no">baseline_stroke</span> <span class="kw">&lt;-</span> <span class="no">pop</span>[<span class="no">baseline_sample</span>,<span class="no">stroke</span>]
 
 <span class="co"># Uncomment to enable a parallel cluster for remaining computations</span>
-<span class="co"># if (require(doParallel)) {</span>
-<span class="co">#     nc &lt;- parallel::detectCores()</span>
-<span class="co">#     cl &lt;- parallel::makeCluster(nc)</span>
-<span class="co">#     doParallel::registerDoParallel(cl)</span>
-<span class="co">#     ## User made functions/objects have to be manually exported, list them in 'export'</span>
-<span class="co">#     sim_sample$start_cluster(cl, nc, export = c("expit", "logit", "rbern"))</span>
-<span class="co"># }</span>
+<span class="co">#if (require(doParallel)) {</span>
+<span class="co">#    nc &lt;- parallel::detectCores()</span>
+<span class="co">#    cl &lt;- parallel::makeCluster(nc)</span>
+<span class="co">#    doParallel::registerDoParallel(cl)</span>
+<span class="co">#    ## User made functions/objects have to be manually exported, list them in 'export'</span>
+<span class="co">#    sim_sample$start_cluster(cl, nc, export = c("expit", "logit", "rbern"))</span>
+<span class="co">#}</span>
 
-<span class="no">sim_sample</span>$<span class="fu">run</span>(<span class="fl">365</span>)
+<span class="no">sim_sample</span>$<span class="fu">run</span>(<span class="fl">10</span> * <span class="fl">365</span>)
 <span class="no">sim_sample</span>$<span class="fu">stop_cluster</span>()
 
-<span class="no">pop</span> <span class="kw">&lt;-</span> <span class="no">sim_sample</span>$<span class="fu">get_population</span>()[<span class="fu"><a href="https://Rdatatable.gitlab.io/data.table/reference/setorder.html">order</a></span>(<span class="no">id</span>),]
-<span class="no">drop_end</span> <span class="kw">&lt;-</span> <span class="fu">dropout</span>(<span class="no">pop</span>)
+<span class="co"># Update stroke status after 10 years</span>
+<span class="no">pop_10y</span> <span class="kw">&lt;-</span> <span class="no">sim_sample</span>$<span class="fu">get_population</span>()[<span class="fu"><a href="https://Rdatatable.gitlab.io/data.table/reference/setorder.html">order</a></span>(<span class="no">id</span>),]
+<span class="no">pop</span>[<span class="no">baseline_sample</span>, <span class="no">stroke</span> <span class="kw">:=</span> <span class="no">pop_10y</span>[<span class="no">baseline_sample</span>,<span class="no">stroke</span>]]
 
-<span class="co"># Comparing to subsets: one with dropout (miss), one without (full)</span>
-<span class="no">included_miss</span> <span class="kw">&lt;-</span> (<span class="no">pop</span>$<span class="no">alive</span> <span class="kw">==</span> <span class="fl">1</span> <span class="kw">|</span> <span class="no">pop</span>$<span class="no">stroke</span> <span class="kw">==</span> <span class="fl">1</span>) <span class="kw">&amp;</span> <span class="no">drop_start</span> <span class="kw">==</span> <span class="fl">0</span> <span class="kw">&amp;</span> <span class="no">drop_end</span> <span class="kw">==</span> <span class="fl">0</span>
-<span class="no">included_full</span> <span class="kw">&lt;-</span> (<span class="no">pop</span>$<span class="no">alive</span> <span class="kw">==</span> <span class="fl">1</span> <span class="kw">|</span> <span class="no">pop</span>$<span class="no">stroke</span> <span class="kw">==</span> <span class="fl">1</span>)
+<span class="co"># Comparing two subsets: one with dropout (miss), one without (full)</span>
+<span class="co"># (and one with the entire population, if included, otherwise same as full)</span>
+<span class="no">included_miss</span> <span class="kw">&lt;-</span> <span class="no">baseline_sample</span> <span class="kw">&amp;</span> <span class="no">baseline_nonresp</span> <span class="kw">==</span> <span class="fl">0</span> <span class="kw">&amp;</span> <span class="no">baseline_stroke</span> <span class="kw">==</span> <span class="fl">0</span>
+<span class="no">included_full</span> <span class="kw">&lt;-</span> <span class="no">baseline_sample</span> <span class="kw">&amp;</span> <span class="no">baseline_stroke</span> <span class="kw">==</span> <span class="fl">0</span>
+<span class="co">#included_pop &lt;- baseline_stroke</span>
 
 <span class="co"># Separate models for males and females</span>
 <span class="no">model_miss_m</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/glm.html">glm</a></span>(<span class="no">stroke</span> ~ <span class="no">age</span> + <span class="no">smoking</span> + <span class="no">blood_pressure</span> + <span class="no">hdl_cholesterol</span> + <span class="no">diabetes</span> + <span class="no">parent_stroke</span>,
@@ -293,16 +315,41 @@
 <span class="no">model_full_f</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/glm.html">glm</a></span>(<span class="no">stroke</span> ~ <span class="no">age</span> + <span class="no">smoking</span> + <span class="no">blood_pressure</span> + <span class="no">hdl_cholesterol</span> + <span class="no">diabetes</span> + <span class="no">parent_stroke</span>,
                     <span class="kw">data</span> <span class="kw">=</span> <span class="no">pop</span>[<span class="no">included_full</span> <span class="kw">&amp;</span> <span class="no">sex</span> <span class="kw">==</span> <span class="fl">1</span>, ], <span class="kw">family</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/family.html">binomial</a></span>())
 
+<span class="co">#model_pop_m &lt;- glm(stroke ~ age + smoking + blood_pressure + hdl_cholesterol + diabetes + parent_stroke, </span>
+<span class="co">#                    data = pop[included_pop &amp; sex == 0, ], family = binomial())</span>
+<span class="co">#model_pop_f &lt;- glm(stroke ~ age + smoking + blood_pressure + hdl_cholesterol + diabetes + parent_stroke, </span>
+<span class="co">#                    data = pop[included_pop &amp; sex == 1, ], family = binomial())</span>
+
 <span class="fu"><a href="https://rdrr.io/r/base/summary.html">summary</a></span>(<span class="no">model_miss_m</span>)
 <span class="fu"><a href="https://rdrr.io/r/base/summary.html">summary</a></span>(<span class="no">model_miss_f</span>)
 <span class="fu"><a href="https://rdrr.io/r/base/summary.html">summary</a></span>(<span class="no">model_full_m</span>)
-<span class="fu"><a href="https://rdrr.io/r/base/summary.html">summary</a></span>(<span class="no">model_full_f</span>)</pre></body></html></div>
+<span class="fu"><a href="https://rdrr.io/r/base/summary.html">summary</a></span>(<span class="no">model_full_f</span>)
+<span class="co">#summary(model_pop_f)</span>
+<span class="co">#summary(model_pop_m)</span>
+
+<span class="fu"><a href="https://rdrr.io/r/base/Round.html">round</a></span>(<span class="fu"><a href="https://rdrr.io/r/base/Log.html">exp</a></span>(<span class="fu"><a href="https://rdrr.io/r/stats/coef.html">coef</a></span>(<span class="no">model_miss_m</span>)), <span class="fl">2</span>)
+<span class="fu"><a href="https://rdrr.io/r/base/Round.html">round</a></span>(<span class="fu"><a href="https://rdrr.io/r/base/Log.html">exp</a></span>(<span class="fu"><a href="https://rdrr.io/r/stats/coef.html">coef</a></span>(<span class="no">model_miss_f</span>)), <span class="fl">2</span>)
+<span class="fu"><a href="https://rdrr.io/r/base/Round.html">round</a></span>(<span class="fu"><a href="https://rdrr.io/r/base/Log.html">exp</a></span>(<span class="fu"><a href="https://rdrr.io/r/stats/coef.html">coef</a></span>(<span class="no">model_full_m</span>)), <span class="fl">2</span>)
+<span class="fu"><a href="https://rdrr.io/r/base/Round.html">round</a></span>(<span class="fu"><a href="https://rdrr.io/r/base/Log.html">exp</a></span>(<span class="fu"><a href="https://rdrr.io/r/stats/coef.html">coef</a></span>(<span class="no">model_full_f</span>)), <span class="fl">2</span>)
+<span class="co">#round(exp(coef(model_pop_m)), 2)</span>
+<span class="co">#round(exp(coef(model_pop_f)), 2)</span>
+
+<span class="fu"><a href="https://rdrr.io/r/base/Round.html">round</a></span>(<span class="fu"><a href="https://rdrr.io/r/base/Log.html">exp</a></span>(<span class="fu"><a href="https://rdrr.io/r/stats/confint.html">confint</a></span>(<span class="no">model_miss_m</span>)), <span class="fl">2</span>)
+<span class="fu"><a href="https://rdrr.io/r/base/Round.html">round</a></span>(<span class="fu"><a href="https://rdrr.io/r/base/Log.html">exp</a></span>(<span class="fu"><a href="https://rdrr.io/r/stats/confint.html">confint</a></span>(<span class="no">model_miss_f</span>)), <span class="fl">2</span>)
+<span class="fu"><a href="https://rdrr.io/r/base/Round.html">round</a></span>(<span class="fu"><a href="https://rdrr.io/r/base/Log.html">exp</a></span>(<span class="fu"><a href="https://rdrr.io/r/stats/confint.html">confint</a></span>(<span class="no">model_full_m</span>)), <span class="fl">2</span>)
+<span class="fu"><a href="https://rdrr.io/r/base/Round.html">round</a></span>(<span class="fu"><a href="https://rdrr.io/r/base/Log.html">exp</a></span>(<span class="fu"><a href="https://rdrr.io/r/stats/confint.html">confint</a></span>(<span class="no">model_full_f</span>)), <span class="fl">2</span>)
+<span class="co">#round(exp(confint(model_pop_m)), 2)</span>
+<span class="co">#round(exp(confint(model_pop_f)), 2)</span></pre></body></html></div>
 </div>
 <div id="events" class="section level2">
 <h2 class="hasAnchor">
 <a href="#events" class="anchor"></a>Events</h2>
 <p>The file <code>DiabetesAndStrokeEvents.R</code> includes the event definitions</p>
-<div class="sourceCode" id="cb2"><html><body><pre class="r"><span class="no">aging</span> <span class="kw">&lt;-</span> <span class="no">ManipulationEvent</span>$<span class="fu">new</span>(
+<div class="sourceCode"><html><body><pre class="r"><span class="co">#####################</span>
+<span class="co"># Event definitions #</span>
+<span class="co">#####################</span>
+
+<span class="no">aging</span> <span class="kw">&lt;-</span> <span class="no">ManipulationEvent</span>$<span class="fu">new</span>(
     <span class="kw">name</span> <span class="kw">=</span> <span class="st">"Aging"</span>,
     <span class="kw">description</span> <span class="kw">=</span> <span class="st">"Normal aging of individuals"</span>,
     <span class="kw">parameters</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(),
@@ -313,10 +360,10 @@
 
 <span class="no">other_mortality</span> <span class="kw">&lt;-</span> <span class="no">ManipulationEvent</span>$<span class="fu">new</span>(
     <span class="kw">name</span> <span class="kw">=</span> <span class="st">"Other Mortality"</span>,
-    <span class="kw">description</span> <span class="kw">=</span> <span class="st">"Death due to other reasons than stroke"</span>,
+    <span class="kw">description</span> <span class="kw">=</span> <span class="st">"Risk of death when no stroke has occurred"</span>,
     <span class="kw">parameters</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="fl">13.16346</span>, <span class="fl">165.34514</span>),
     <span class="kw">mechanism</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/expression.html">expression</a></span>({
-        <span class="no">status</span>[<span class="no">living</span>, <span class="no">alive</span> <span class="kw">:=</span> <span class="fu">rbern</span>(<span class="fl">1</span> - <span class="fu"><a href="https://rdrr.io/r/stats/Weibull.html">pweibull</a></span>(<span class="no">age</span>, <span class="kw">shape</span> <span class="kw">=</span> <span class="no">par</span>[<span class="fl">1</span>], <span class="kw">scale</span> <span class="kw">=</span> <span class="no">par</span>[<span class="fl">2</span>]))]
+        <span class="no">status</span>[<span class="no">living</span> <span class="kw">&amp;</span> <span class="no">stroke</span> <span class="kw">==</span> <span class="fl">0L</span>, <span class="no">alive</span> <span class="kw">:=</span> <span class="fu">rbern</span>(<span class="fl">1</span> - <span class="fu"><a href="https://rdrr.io/r/stats/Weibull.html">pweibull</a></span>(<span class="no">age</span>, <span class="kw">shape</span> <span class="kw">=</span> <span class="no">par</span>[<span class="fl">1</span>], <span class="kw">scale</span> <span class="kw">=</span> <span class="no">par</span>[<span class="fl">2</span>]))]
     })
 )
 
@@ -331,10 +378,8 @@
     <span class="kw">mechanism</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/expression.html">expression</a></span>({
         <span class="no">subset_male</span>   <span class="kw">&lt;-</span> <span class="no">status</span>[<span class="no">living</span> <span class="kw">&amp;</span> <span class="no">stroke</span> <span class="kw">==</span> <span class="fl">0L</span> <span class="kw">&amp;</span> <span class="no">sex</span> <span class="kw">==</span> <span class="fl">0L</span>, <span class="kw">which</span> <span class="kw">=</span> <span class="fl">TRUE</span>]
         <span class="no">subset_female</span> <span class="kw">&lt;-</span> <span class="no">status</span>[<span class="no">living</span> <span class="kw">&amp;</span> <span class="no">stroke</span> <span class="kw">==</span> <span class="fl">0L</span> <span class="kw">&amp;</span> <span class="no">sex</span> <span class="kw">==</span> <span class="fl">1L</span>, <span class="kw">which</span> <span class="kw">=</span> <span class="fl">TRUE</span>]
-        <span class="no">X_male</span>   <span class="kw">&lt;-</span> <span class="fu"><a href="https://Rdatatable.gitlab.io/data.table/reference/as.matrix.html">as.matrix</a></span>(<span class="no">status</span>[<span class="no">subset_male</span>,   <span class="fu">.</span>(<span class="kw">const</span> <span class="kw">=</span> <span class="fl">1</span>, <span class="no">age</span>, <span class="no">smoking</span>, <span class="no">blood_pressure</span>,
-                                                      <span class="no">hdl_cholesterol</span>, <span class="no">diabetes</span>, <span class="no">parent_stroke</span>)])
-        <span class="no">X_female</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://Rdatatable.gitlab.io/data.table/reference/as.matrix.html">as.matrix</a></span>(<span class="no">status</span>[<span class="no">subset_female</span>, <span class="fu">.</span>(<span class="kw">const</span> <span class="kw">=</span> <span class="fl">1</span>, <span class="no">age</span>, <span class="no">smoking</span>, <span class="no">blood_pressure</span>,
-                                                      <span class="no">hdl_cholesterol</span>, <span class="no">diabetes</span>, <span class="no">parent_stroke</span>)])
+        <span class="no">X_male</span>   <span class="kw">&lt;-</span> <span class="fu"><a href="https://Rdatatable.gitlab.io/data.table/reference/as.matrix.html">as.matrix</a></span>(<span class="no">status</span>[<span class="no">subset_male</span>,   <span class="fu">.</span>(<span class="kw">const</span> <span class="kw">=</span> <span class="fl">1</span>, <span class="no">age</span>, <span class="no">smoking</span>, <span class="no">blood_pressure</span>, <span class="no">hdl_cholesterol</span>, <span class="no">diabetes</span>, <span class="no">parent_stroke</span>)])
+        <span class="no">X_female</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://Rdatatable.gitlab.io/data.table/reference/as.matrix.html">as.matrix</a></span>(<span class="no">status</span>[<span class="no">subset_female</span>, <span class="fu">.</span>(<span class="kw">const</span> <span class="kw">=</span> <span class="fl">1</span>, <span class="no">age</span>, <span class="no">smoking</span>, <span class="no">blood_pressure</span>, <span class="no">hdl_cholesterol</span>, <span class="no">diabetes</span>, <span class="no">parent_stroke</span>)])
 
         <span class="co"># Compute 1 day risk from 10 year risk by assuming a Poisson process.</span>
         <span class="no">prob_male_10year</span>   <span class="kw">&lt;-</span> <span class="fl">1</span> - <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html">pmin</a></span>(<span class="fu">expit</span>( (<span class="no">X_male</span> <span class="kw">%*%</span> <span class="no">par</span>[<span class="fl">1</span>:<span class="fl">7</span>])[ ,<span class="fl">1</span>] ), <span class="fl">1</span>)
@@ -385,11 +430,10 @@
 
 <span class="no">stroke_mortality</span> <span class="kw">&lt;-</span> <span class="no">ManipulationEvent</span>$<span class="fu">new</span>(
     <span class="kw">name</span> <span class="kw">=</span> <span class="st">"Stroke Mortality"</span>,
-    <span class="kw">description</span> <span class="kw">=</span> <span class="st">"Death due to stroke"</span>,
-    <span class="kw">parameters</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="fl">8.1748187</span>, -<span class="fl">9.5942954</span>, -<span class="fl">0.2828828</span>),
+    <span class="kw">description</span> <span class="kw">=</span> <span class="st">"Risk of death after suffering a stroke"</span>,
+    <span class="kw">parameters</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="fl">5.41859</span>, <span class="fl">8.17473693</span>, -<span class="fl">2.47553590</span>, -<span class="fl">0.01651868</span>),
     <span class="kw">mechanism</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/expression.html">expression</a></span>({
-        <span class="no">status</span>[<span class="no">living</span> <span class="kw">&amp;</span> <span class="no">stroke</span> <span class="kw">==</span> <span class="fl">1L</span>, <span class="no">alive</span> <span class="kw">:=</span> <span class="fu">rbern</span>(<span class="fu"><a href="https://Rdatatable.gitlab.io/data.table/reference/fifelse.html">ifelse</a></span>(<span class="no">age</span> - <span class="no">age_at_stroke</span> <span class="kw">&lt;</span> <span class="fl">28.0</span> / <span class="fl">365.0</span>,
-            <span class="fl">0.72</span> ^ (<span class="fl">1</span> / <span class="fl">28</span>), <span class="fu">expit</span>(<span class="no">par</span>[<span class="fl">1</span>] + <span class="no">par</span>[<span class="fl">2</span>] * <span class="fu"><a href="https://rdrr.io/r/base/Log.html">exp</a></span>(((<span class="no">age</span> - <span class="no">age_at_stroke</span>) * <span class="fl">365</span> - <span class="fl">27</span>) * <span class="no">par</span>[<span class="fl">3</span>]))))]
+        <span class="no">status</span>[<span class="no">living</span> <span class="kw">&amp;</span> <span class="no">stroke</span> <span class="kw">==</span> <span class="fl">1L</span>, <span class="no">alive</span> <span class="kw">:=</span> <span class="fu">rbern</span>(<span class="fu"><a href="https://Rdatatable.gitlab.io/data.table/reference/fifelse.html">ifelse</a></span>(<span class="no">age</span> - <span class="no">age_at_stroke</span> <span class="kw">&lt;</span> (<span class="fl">28.0</span> / <span class="fl">365.0</span>), <span class="no">par</span>[<span class="fl">1</span>], <span class="fu">expit</span>(<span class="no">par</span>[<span class="fl">2</span>] + <span class="no">par</span>[<span class="fl">3</span>] * <span class="fu"><a href="https://rdrr.io/r/base/Log.html">exp</a></span>(((<span class="no">age</span> - <span class="no">age_at_stroke</span>) * <span class="fl">365</span> - <span class="fl">27</span>) * <span class="no">par</span>[<span class="fl">4</span>]))))]
     })
 )
 
@@ -398,8 +442,7 @@
     <span class="kw">description</span> <span class="kw">=</span> <span class="st">"Blood pressure medication"</span>,
     <span class="kw">parameters</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="fl">140</span>),
     <span class="kw">mechanism</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/expression.html">expression</a></span>({
-        <span class="no">status</span>[<span class="no">living</span> <span class="kw">&amp;</span> <span class="no">blood_pressure</span> <span class="kw">&gt;=</span> <span class="no">par</span>[<span class="fl">1</span>] <span class="kw">&amp;</span> <span class="no">takes_bp_medicine</span> <span class="kw">==</span> <span class="fl">0L</span>,
-               <span class="fu">`:=`</span> (<span class="kw">takes_bp_medicine</span> <span class="kw">=</span> <span class="fl">1L</span>, <span class="kw">blood_pressure</span> <span class="kw">=</span> <span class="no">blood_pressure</span> - <span class="fl">5</span>)]
+        <span class="no">status</span>[<span class="no">living</span> <span class="kw">&amp;</span> <span class="no">blood_pressure</span> <span class="kw">&gt;=</span> <span class="no">par</span>[<span class="fl">1</span>] <span class="kw">&amp;</span> <span class="no">takes_bp_medicine</span> <span class="kw">==</span> <span class="fl">0L</span>, <span class="fu">`:=`</span> (<span class="kw">takes_bp_medicine</span> <span class="kw">=</span> <span class="fl">1L</span>, <span class="kw">blood_pressure</span> <span class="kw">=</span> <span class="no">blood_pressure</span> - <span class="fl">5</span>)]
     })
 )
 
@@ -414,8 +457,10 @@
 <h2 class="hasAnchor">
 <a href="#initial-population" class="anchor"></a>Initial population</h2>
 <p>The file <code>DiabetesAndStrokeData.R</code> contains the following function for generating the initial population (of size <code>n</code>)</p>
-<div class="sourceCode" id="cb3"><html><body><pre class="r"><span class="no">initializer</span> <span class="kw">&lt;-</span> <span class="kw">function</span>(<span class="no">n</span>) {
-    <span class="fu"><a href="https://rdrr.io/r/base/Random.html">set.seed</a></span>(<span class="fl">100</span>) <span class="co"># Seed for initial data generation</span>
+<div class="sourceCode"><html><body><pre class="r"><span class="no">initializer</span> <span class="kw">&lt;-</span> <span class="kw">function</span>(<span class="no">n</span>) {
+    <span class="co"># Seed for initial data generation</span>
+    <span class="fu"><a href="https://rdrr.io/r/base/Random.html">set.seed</a></span>(<span class="fl">100</span>)
+    <span class="kw pkg">dqrng</span><span class="kw ns">::</span><span class="fu"><a href="https://rdrr.io/pkg/dqrng/man/dqrng-functions.html">dqset.seed</a></span>(<span class="fl">100</span>)
     <span class="no">widths</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="fl">2</span>,<span class="fl">1</span>,<span class="fl">2</span>,<span class="fl">2</span>,<span class="fl">6</span>,<span class="fl">1</span>,<span class="fl">3</span>,<span class="fl">8</span>,<span class="fl">8</span>,<span class="fl">1</span>,<span class="fl">1</span>,<span class="fl">1</span>,<span class="fl">1</span>,<span class="fl">2</span>,<span class="fl">1</span>,<span class="fl">3</span>,<span class="fl">1</span>,<span class="fl">1</span>,<span class="fl">4</span>,<span class="fl">1</span>,<span class="fl">3</span>,<span class="fl">2</span>,<span class="fl">1</span>,<span class="fl">3</span>,<span class="fl">1</span>,<span class="fl">3</span>,<span class="fl">2</span>,<span class="fl">1</span>,<span class="fl">1</span>,<span class="fl">1</span>,<span class="fl">1</span>,<span class="fl">1</span>,<span class="fl">1</span>,<span class="fl">1</span>,<span class="fl">1</span>,<span class="fl">1</span>,<span class="fl">2</span>,<span class="fl">1</span>,
                 <span class="fl">1</span>,<span class="fl">3</span>,<span class="fl">3</span>,<span class="fl">2</span>,<span class="fl">3</span>,<span class="fl">3</span>,<span class="fl">2</span>,<span class="fl">1</span>,<span class="fl">2</span>,<span class="fl">2</span>,<span class="fl">4</span>,<span class="fl">2</span>,<span class="fl">3</span>,<span class="fl">3</span>,<span class="fl">8</span>,<span class="fl">3</span>,<span class="fl">3</span>,<span class="fl">8</span>,<span class="fl">3</span>,<span class="fl">4</span>,<span class="fl">2</span>,<span class="fl">3</span>,<span class="fl">4</span>,<span class="fl">4</span>,<span class="fl">4</span>,<span class="fl">2</span>,<span class="fl">1</span>,<span class="fl">2</span>,<span class="fl">1</span>,<span class="fl">1</span>,<span class="fl">1</span>,<span class="fl">1</span>,<span class="fl">1</span>,<span class="fl">4</span>,<span class="fl">4</span>,<span class="fl">4</span>,<span class="fl">4</span>)
     <span class="no">colnames</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="st">"form"</span>,<span class="st">"versn"</span>,<span class="st">"centre"</span>,<span class="st">"runit"</span>,<span class="st">"serial"</span>,<span class="st">"numsur"</span>,<span class="st">"samunit"</span>,<span class="st">"dexam"</span>,<span class="st">"mbirth"</span>,
@@ -429,20 +474,25 @@
     <span class="no">monica</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/utils/read.fwf.html">read.fwf</a></span>(<span class="st">"data/form04_3.txt"</span>, <span class="kw">widths</span> <span class="kw">=</span> <span class="no">widths</span>, <span class="kw">col.names</span> <span class="kw">=</span> <span class="no">colnames</span>)
 
     <span class="no">age_structure</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/utils/read.table.html">read.csv2</a></span>(<span class="kw">file</span> <span class="kw">=</span> <span class="st">"data/vaesto_3112_2017.csv"</span>, <span class="kw">header</span> <span class="kw">=</span> <span class="fl">TRUE</span>)
-    <span class="no">sex_init</span> <span class="kw">=</span> <span class="fu">rbin</span>(<span class="no">n</span>)
+    <span class="no">sex</span> <span class="kw">&lt;-</span> <span class="fu">rbin</span>(<span class="no">n</span>)
     <span class="no">mf</span> <span class="kw">&lt;-</span> <span class="no">age_structure</span>[,<span class="fl">2</span>:<span class="fl">3</span>]
     <span class="no">age_structure</span>[,<span class="fl">2</span>:<span class="fl">3</span>] <span class="kw">&lt;-</span> <span class="no">mf</span> / <span class="fu"><a href="https://rdrr.io/r/base/colSums.html">colSums</a></span>(<span class="no">mf</span>)[<span class="fu"><a href="https://rdrr.io/r/base/col.html">col</a></span>(<span class="no">mf</span>)]
-    <span class="no">age_init</span> <span class="kw">&lt;-</span> (<span class="no">sex_init</span> <span class="kw">==</span> <span class="fl">0L</span>) * <span class="fu"><a href="https://rdrr.io/r/base/sample.html">sample</a></span>(<span class="fl">30</span>:<span class="fl">99</span>, <span class="no">n</span>, <span class="kw">replace</span> <span class="kw">=</span> <span class="fl">TRUE</span>, <span class="kw">prob</span> <span class="kw">=</span> <span class="no">age_structure</span>[,<span class="fl">2</span>]) +
-                (<span class="no">sex_init</span> <span class="kw">==</span> <span class="fl">1L</span>) * <span class="fu"><a href="https://rdrr.io/r/base/sample.html">sample</a></span>(<span class="fl">30</span>:<span class="fl">99</span>, <span class="no">n</span>, <span class="kw">replace</span> <span class="kw">=</span> <span class="fl">TRUE</span>, <span class="kw">prob</span> <span class="kw">=</span> <span class="no">age_structure</span>[,<span class="fl">3</span>])
-    <span class="no">smoking</span> <span class="kw">&lt;-</span> <span class="fu">sex_age_init</span>(<span class="no">n</span>, <span class="no">sex_init</span>, <span class="no">age_init</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="fl">0.319</span>, <span class="fl">0.298</span>, <span class="fl">0.278</span>, <span class="fl">0.219</span>, <span class="fl">0.109</span>, <span class="fl">0.016</span>),
+    <span class="no">age</span> <span class="kw">&lt;-</span> (<span class="no">sex</span> <span class="kw">==</span> <span class="fl">0L</span>) * <span class="fu"><a href="https://rdrr.io/r/base/sample.html">sample</a></span>(<span class="fl">30</span>:<span class="fl">99</span>, <span class="no">n</span>, <span class="kw">replace</span> <span class="kw">=</span> <span class="fl">TRUE</span>, <span class="kw">prob</span> <span class="kw">=</span> <span class="no">age_structure</span>[,<span class="fl">2</span>]) +
+           (<span class="no">sex</span> <span class="kw">==</span> <span class="fl">1L</span>) * <span class="fu"><a href="https://rdrr.io/r/base/sample.html">sample</a></span>(<span class="fl">30</span>:<span class="fl">99</span>, <span class="no">n</span>, <span class="kw">replace</span> <span class="kw">=</span> <span class="fl">TRUE</span>, <span class="kw">prob</span> <span class="kw">=</span> <span class="no">age_structure</span>[,<span class="fl">3</span>])
+    <span class="no">smoking</span> <span class="kw">&lt;-</span> <span class="fu">sex_age_init</span>(<span class="no">n</span>, <span class="no">sex</span>, <span class="no">age</span>,
+                            <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="fl">0.319</span>, <span class="fl">0.298</span>, <span class="fl">0.278</span>, <span class="fl">0.219</span>, <span class="fl">0.109</span>, <span class="fl">0.016</span>),
                             <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="fl">0.229</span>, <span class="fl">0.193</span>, <span class="fl">0.184</span>, <span class="fl">0.147</span>, <span class="fl">0.054</span>, <span class="fl">0.016</span>), <span class="fl">30</span>, <span class="fl">80</span>, <span class="fl">10</span>)
-    <span class="no">diabetes</span> <span class="kw">&lt;-</span> <span class="fu">sex_age_init</span>(<span class="no">n</span>, <span class="no">sex_init</span>, <span class="no">age_init</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="fl">0.012</span>, <span class="fl">0.045</span>, <span class="fl">0.110</span>, <span class="fl">0.209</span>, <span class="fl">0.244</span>, <span class="fl">0.220</span>),
-                             <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="fl">0.022</span>, <span class="fl">0.032</span>, <span class="fl">0.056</span>, <span class="fl">0.126</span>, <span class="fl">0.172</span>, <span class="fl">0.204</span>), <span class="fl">30</span>, <span class="fl">80</span>, <span class="fl">10</span>)
-    <span class="no">parent_stroke</span> <span class="kw">&lt;-</span> <span class="fu">rbin</span>(<span class="no">n</span>, <span class="kw">prob</span> <span class="kw">=</span> <span class="fl">0.131</span>)
-    <span class="no">high_glucose</span> <span class="kw">&lt;-</span> <span class="fu">sex_age_init</span>(<span class="no">n</span>, <span class="no">sex_init</span>, <span class="no">age_init</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="fl">0.013</span>, <span class="fl">0.043</span>, <span class="fl">0.080</span>, <span class="fl">0.114</span>, <span class="fl">0.128</span>, <span class="fl">0.110</span>),
+
+    <span class="no">parent_stroke</span> <span class="kw">&lt;-</span> <span class="fu">rbin</span>(<span class="no">n</span>, <span class="kw">prob</span> <span class="kw">=</span> <span class="fl">0.127</span>)
+    <span class="no">high_glucose</span> <span class="kw">&lt;-</span> <span class="fu">sex_age_init</span>(<span class="no">n</span>, <span class="no">sex</span>, <span class="no">age</span>,
+                                 <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="fl">0.013</span>, <span class="fl">0.043</span>, <span class="fl">0.080</span>, <span class="fl">0.114</span>, <span class="fl">0.128</span>, <span class="fl">0.110</span>),
                                  <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="fl">0.019</span>, <span class="fl">0.012</span>, <span class="fl">0.030</span>, <span class="fl">0.055</span>, <span class="fl">0.121</span>, <span class="fl">0.093</span>), <span class="fl">30</span>, <span class="fl">80</span>, <span class="fl">10</span>)
-    <span class="no">stroke</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html">rep</a></span>(<span class="fl">0L</span>, <span class="no">n</span>)
+    <span class="no">stroke</span> <span class="kw">&lt;-</span> <span class="fu">sex_age_init</span>(<span class="no">n</span>, <span class="no">sex</span>, <span class="no">age</span>,
+                           <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="fl">0.027</span>, <span class="fl">0.063</span>, <span class="fl">0.091</span>, <span class="fl">0.163</span>),
+                           <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="fl">0.013</span>, <span class="fl">0.029</span>, <span class="fl">0.061</span>, <span class="fl">0.137</span>), <span class="fl">50</span>, <span class="fl">80</span>, <span class="fl">10</span>)
     <span class="no">age_at_stroke</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html">rep</a></span>(<span class="fl">0.0</span>, <span class="no">n</span>)
+    <span class="no">age_at_stroke</span>[<span class="no">stroke</span> <span class="kw">==</span> <span class="fl">1L</span>] <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html">pmax</a></span>(<span class="no">age</span>[<span class="no">stroke</span> <span class="kw">==</span> <span class="fl">1L</span>] -
+        (<span class="fu"><a href="https://rdrr.io/r/stats/Weibull.html">rweibull</a></span>(<span class="fu"><a href="https://rdrr.io/r/base/sum.html">sum</a></span>(<span class="no">stroke</span>), <span class="kw">shape</span> <span class="kw">=</span> <span class="fl">0.509246</span>, <span class="kw">scale</span> <span class="kw">=</span> <span class="fl">1634.480968</span>)) / <span class="fl">365.0</span>, <span class="fl">30</span>)
 
     <span class="co"># decoding missing values</span>
     <span class="no">monica</span>$<span class="no">height</span>[<span class="no">monica</span>$<span class="no">height</span> <span class="kw">==</span> <span class="fl">999</span>] <span class="kw">&lt;-</span> <span class="fl">NA</span>
@@ -460,26 +510,33 @@
     <span class="no">monica</span>$<span class="no">hdl</span> <span class="kw">&lt;-</span> <span class="no">monica</span>$<span class="no">hdl</span> / <span class="fl">100</span> <span class="co"># transform to mmol/l</span>
     <span class="no">monica</span>$<span class="no">bmi</span> <span class="kw">&lt;-</span> <span class="no">monica</span>$<span class="no">weight</span> / (<span class="no">monica</span>$<span class="no">height</span> / <span class="fl">100</span>)^<span class="fl">2</span>
     <span class="no">monica</span>$<span class="no">sex</span> <span class="kw">&lt;-</span> <span class="no">monica</span>$<span class="no">sex</span> - <span class="fl">1</span> <span class="co"># female = 1</span>
+    <span class="co">#monica$smoking &lt;- 0 + (monica$cigs %in% c(1,3))</span>
+    <span class="no">monica</span>$<span class="no">smoking</span> <span class="kw">&lt;-</span> <span class="fl">0</span> + (<span class="no">monica</span>$<span class="no">cigs</span> <span class="kw">%in%</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="fl">1</span>, <span class="fl">3</span>) <span class="kw">|</span>
+                           <span class="no">monica</span>$<span class="no">cigarsm</span> <span class="kw">%in%</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="fl">1</span>, <span class="fl">3</span>) <span class="kw">|</span>
+                           <span class="no">monica</span>$<span class="no">pipesm</span> <span class="kw">%in%</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="fl">1</span>, <span class="fl">3</span>))
 
     <span class="no">selcol</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="st">"bmi"</span>, <span class="st">"waist"</span>, <span class="st">"chol"</span>, <span class="st">"hdl"</span>, <span class="st">"systm"</span>)
     <span class="no">m</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/length.html">length</a></span>(<span class="no">selcol</span>)
-    <span class="no">monica2</span> <span class="kw">&lt;-</span> <span class="no">monica</span>[,<span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="st">"eage"</span>, <span class="st">"sex"</span>, <span class="no">selcol</span>)]
-    <span class="no">out</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="fu"><a href="https://rdrr.io/r/base/which.min.html">which.min</a></span>(<span class="no">monica2</span>$<span class="no">waist</span>), <span class="fu"><a href="https://rdrr.io/r/base/which.min.html">which.max</a></span>(<span class="no">monica2</span>$<span class="no">chol</span>)) <span class="co"># removing some outliers</span>
+    <span class="no">monica2</span> <span class="kw">&lt;-</span> <span class="no">monica</span>[,<span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="st">"eage"</span>, <span class="st">"sex"</span>, <span class="st">"smoking"</span>, <span class="no">selcol</span>)]
+    <span class="no">out</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="fu"><a href="https://rdrr.io/r/base/which.min.html">which.min</a></span>(<span class="no">monica2</span>$<span class="no">waist</span>), <span class="fu"><a href="https://rdrr.io/r/base/which.min.html">which.max</a></span>(<span class="no">monica2</span>$<span class="no">chol</span>))
     <span class="no">monica2</span> <span class="kw">&lt;-</span> <span class="no">monica2</span>[-<span class="no">out</span>,]
-    <span class="no">monica2</span>$<span class="no">agegr</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/numeric.html">as.numeric</a></span>(<span class="fu"><a href="https://rdrr.io/r/base/cut.html">cut</a></span>(<span class="no">monica2</span>$<span class="no">eage</span>, <span class="kw">breaks</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="fl">0</span>, <span class="fl">30</span>, <span class="fl">40</span>, <span class="fl">50</span>, <span class="fl">60</span>, <span class="fl">70</span>), <span class="kw">right</span> <span class="kw">=</span> <span class="fl">FALSE</span>))
+    <span class="no">monica2</span>$<span class="no">agegr</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/cut.html">cut</a></span>(<span class="no">monica2</span>$<span class="no">eage</span>, <span class="kw">breaks</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="fl">0</span>, <span class="fl">30</span>, <span class="fl">40</span>, <span class="fl">50</span>, <span class="fl">60</span>, <span class="fl">70</span>), <span class="kw">right</span> <span class="kw">=</span> <span class="fl">FALSE</span>)
 
-    <span class="no">norm_grp</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/expand.grid.html">expand.grid</a></span>(<span class="kw">sex</span> <span class="kw">=</span> <span class="fl">0</span>:<span class="fl">1</span>, <span class="kw">agegr</span> <span class="kw">=</span> <span class="fl">1</span>:<span class="no">m</span>)
+    <span class="co"># Generate initial values in each subgroup of sex, smoking and age</span>
+    <span class="no">norm_grp</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/expand.grid.html">expand.grid</a></span>(<span class="kw">sex</span> <span class="kw">=</span> <span class="fl">0</span>:<span class="fl">1</span>, <span class="kw">smoking</span> <span class="kw">=</span> <span class="fl">0</span>:<span class="fl">1</span>, <span class="kw">agegr</span> <span class="kw">=</span> <span class="fl">1</span>:<span class="fl">5</span>)
     <span class="no">k</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/nrow.html">nrow</a></span>(<span class="no">norm_grp</span>)
     <span class="no">norm_dat</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/vector.html">vector</a></span>(<span class="kw">mode</span> <span class="kw">=</span> <span class="st">"list"</span>, <span class="kw">length</span> <span class="kw">=</span> <span class="no">k</span>)
     <span class="no">norm_par</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/vector.html">vector</a></span>(<span class="kw">mode</span> <span class="kw">=</span> <span class="st">"list"</span>, <span class="kw">length</span> <span class="kw">=</span> <span class="no">k</span>)
 
     <span class="kw">for</span> (<span class="no">i</span> <span class="kw">in</span> <span class="fl">1</span>:<span class="no">k</span>) {
-        <span class="no">ind</span> <span class="kw">&lt;-</span> <span class="no">monica2</span>$<span class="no">sex</span> <span class="kw">==</span> <span class="no">norm_grp</span>[<span class="no">i</span>,<span class="fl">1</span>] <span class="kw">&amp;</span> <span class="no">monica2</span>$<span class="no">agegr</span> <span class="kw">==</span> <span class="no">norm_grp</span>[<span class="no">i</span>,<span class="fl">2</span>]
+        <span class="no">ind</span> <span class="kw">&lt;-</span> (<span class="no">monica2</span>$<span class="no">sex</span> <span class="kw">==</span> <span class="no">norm_grp</span>[<span class="no">i</span>,<span class="fl">1</span>] <span class="kw">&amp;</span>
+                <span class="no">monica2</span>$<span class="no">smoking</span> <span class="kw">==</span> <span class="no">norm_grp</span>[<span class="no">i</span>,<span class="fl">2</span>] <span class="kw">&amp;</span>
+                <span class="fu"><a href="https://rdrr.io/r/base/numeric.html">as.numeric</a></span>(<span class="no">monica2</span>$<span class="no">agegr</span>) <span class="kw">==</span> <span class="no">norm_grp</span>[<span class="no">i</span>,<span class="fl">3</span>])
         <span class="no">ind</span>[<span class="fu"><a href="https://rdrr.io/r/base/NA.html">is.na</a></span>(<span class="no">ind</span>)] <span class="kw">&lt;-</span> <span class="fl">FALSE</span>
         <span class="no">norm_par</span><span class="kw">[[</span><span class="no">i</span>]]$<span class="no">trans</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span>()
         <span class="no">norm_dat</span><span class="kw">[[</span><span class="no">i</span>]] <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html">matrix</a></span>(<span class="fl">0</span>, <span class="fu"><a href="https://rdrr.io/r/base/sum.html">sum</a></span>(<span class="no">ind</span>), <span class="no">m</span>)
         <span class="kw">for</span> (<span class="no">j</span> <span class="kw">in</span> <span class="fl">1</span>:<span class="no">m</span>) {
-            <span class="no">bc</span> <span class="kw">&lt;-</span> <span class="kw pkg">bestNormalize</span><span class="kw ns">::</span><span class="fu">boxcox</span>(<span class="no">monica2</span>[<span class="no">ind</span>,<span class="no">selcol</span>[<span class="no">j</span>]])
+            <span class="no">bc</span> <span class="kw">&lt;-</span> <span class="kw pkg">bestNormalize</span><span class="kw ns">::</span><span class="fu"><a href="https://rdrr.io/pkg/bestNormalize/man/boxcox.html">boxcox</a></span>(<span class="no">monica2</span>[<span class="no">ind</span>,<span class="no">selcol</span>[<span class="no">j</span>]])
             <span class="no">norm_par</span><span class="kw">[[</span><span class="no">i</span>]]$<span class="no">trans</span><span class="kw">[[</span><span class="no">j</span>]] <span class="kw">&lt;-</span> <span class="no">bc</span>
             <span class="no">norm_dat</span><span class="kw">[[</span><span class="no">i</span>]][,<span class="no">j</span>] <span class="kw">&lt;-</span> <span class="no">bc</span>$<span class="no">x.t</span>
         }
@@ -488,10 +545,12 @@
     }
 
     <span class="no">X</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html">matrix</a></span>(<span class="fl">0</span>, <span class="no">n</span>, <span class="no">m</span>)
-    <span class="no">age_init_mon</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/numeric.html">as.numeric</a></span>(<span class="fu"><a href="https://rdrr.io/r/base/cut.html">cut</a></span>(<span class="no">age_init</span>, <span class="kw">breaks</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="fl">0</span>, <span class="fl">30</span>, <span class="fl">40</span>, <span class="fl">50</span>, <span class="fl">60</span>, <span class="fl">100</span>), <span class="kw">right</span> <span class="kw">=</span> <span class="fl">FALSE</span>))
 
-    <span class="kw">for</span> (<span class="no">i</span> <span class="kw">in</span> <span class="fl">3</span>:<span class="no">k</span>) {
-        <span class="no">ind</span> <span class="kw">&lt;-</span> <span class="no">sex_init</span> <span class="kw">==</span> <span class="no">norm_grp</span>[<span class="no">i</span>,<span class="fl">1</span>] <span class="kw">&amp;</span> <span class="no">age_init_mon</span> <span class="kw">==</span> <span class="no">norm_grp</span>[<span class="no">i</span>,<span class="fl">2</span>]
+    <span class="no">age_mon</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/numeric.html">as.numeric</a></span>(<span class="fu"><a href="https://rdrr.io/r/base/cut.html">cut</a></span>(<span class="no">age</span>, <span class="kw">breaks</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="fl">0</span>, <span class="fl">30</span>, <span class="fl">40</span>, <span class="fl">50</span>, <span class="fl">60</span>, <span class="fl">100</span>), <span class="kw">right</span> <span class="kw">=</span> <span class="fl">FALSE</span>))
+    <span class="kw">for</span> (<span class="no">i</span> <span class="kw">in</span> <span class="fl">5</span>:<span class="no">k</span>) {
+        <span class="no">ind</span> <span class="kw">&lt;-</span> (<span class="no">sex</span> <span class="kw">==</span> <span class="no">norm_grp</span>[<span class="no">i</span>,<span class="fl">1</span>] <span class="kw">&amp;</span>
+                <span class="no">smoking</span> <span class="kw">==</span> <span class="no">norm_grp</span>[<span class="no">i</span>,<span class="fl">2</span>] <span class="kw">&amp;</span>
+                <span class="no">age_mon</span> <span class="kw">==</span> <span class="no">norm_grp</span>[<span class="no">i</span>,<span class="fl">3</span>])
         <span class="no">temp</span> <span class="kw">&lt;-</span> <span class="kw pkg">MASS</span><span class="kw ns">::</span><span class="fu"><a href="https://rdrr.io/pkg/MASS/man/mvrnorm.html">mvrnorm</a></span>(<span class="fu"><a href="https://rdrr.io/r/base/sum.html">sum</a></span>(<span class="no">ind</span>), <span class="kw">mu</span> <span class="kw">=</span> <span class="no">norm_par</span><span class="kw">[[</span><span class="no">i</span>]]$<span class="no">mu</span>, <span class="kw">Sigma</span> <span class="kw">=</span> <span class="no">norm_par</span><span class="kw">[[</span><span class="no">i</span>]]$<span class="no">Sigma</span>)
         <span class="kw">for</span> (<span class="no">j</span> <span class="kw">in</span> <span class="fl">1</span>:<span class="no">m</span>) {
             <span class="no">temp</span>[,<span class="no">j</span>] <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/predict.html">predict</a></span>(<span class="no">norm_par</span><span class="kw">[[</span><span class="no">i</span>]]$<span class="no">trans</span><span class="kw">[[</span><span class="no">j</span>]], <span class="no">temp</span>[,<span class="no">j</span>], <span class="kw">inverse</span> <span class="kw">=</span> <span class="fl">TRUE</span>)
@@ -499,35 +558,40 @@
         <span class="no">X</span>[<span class="no">ind</span>,] <span class="kw">&lt;-</span> <span class="no">temp</span>
     }
 
-    <span class="co"># Correct mean values to match the year 2017</span>
-    <span class="no">age_init_grp</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/numeric.html">as.numeric</a></span>(<span class="fu"><a href="https://rdrr.io/r/base/cut.html">cut</a></span>(<span class="no">age_init</span>, <span class="kw">breaks</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="fl">30</span>, <span class="fl">40</span>, <span class="fl">50</span>, <span class="fl">60</span>, <span class="fl">70</span>, <span class="fl">80</span>, <span class="fl">1000</span>), <span class="kw">right</span> <span class="kw">=</span> <span class="fl">FALSE</span>))
-    <span class="no">gen_grp</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/expand.grid.html">expand.grid</a></span>(<span class="kw">agegr</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sort.html">sort</a></span>(<span class="fu"><a href="https://Rdatatable.gitlab.io/data.table/reference/duplicated.html">unique</a></span>(<span class="no">age_init_grp</span>)), <span class="kw">sex</span> <span class="kw">=</span> <span class="fl">0</span>:<span class="fl">1</span>)
-    <span class="no">gen_grp</span>$<span class="no">bmi</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="fl">27.0</span>, <span class="fl">27.6</span>, <span class="fl">28.5</span>, <span class="fl">28.1</span>, <span class="fl">27.4</span>, <span class="fl">27.2</span>, <span class="fl">25.8</span>, <span class="fl">27.1</span>, <span class="fl">28.1</span>, <span class="fl">28.2</span>, <span class="fl">28.3</span>, <span class="fl">28.3</span>)
-    <span class="no">gen_grp</span>$<span class="no">waist_circumference</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="fl">93.7</span>, <span class="fl">97.4</span>, <span class="fl">102.0</span>, <span class="fl">103.1</span>, <span class="fl">101.3</span>, <span class="fl">100.3</span>,
-                                     <span class="fl">83.4</span>, <span class="fl">87.8</span>, <span class="fl">91.7</span>, <span class="fl">92.9</span>, <span class="fl">93.9</span>, <span class="fl">93.8</span>)
-    <span class="no">gen_grp</span>$<span class="no">cholesterol</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html">rep</a></span>(<span class="fl">0</span>, <span class="fl">12</span>)
-    <span class="no">gen_grp</span>$<span class="no">hdl_cholesterol</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html">rep</a></span>(<span class="fl">0</span>, <span class="fl">12</span>)
-    <span class="no">gen_grp</span>$<span class="no">bp</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="fl">133</span>, <span class="fl">133</span>, <span class="fl">133</span>, <span class="fl">133</span>, <span class="fl">143</span>, <span class="fl">143</span>, <span class="fl">127</span>, <span class="fl">127</span>, <span class="fl">127</span>, <span class="fl">127</span>, <span class="fl">146</span>, <span class="fl">146</span>)
-    <span class="no">adjust</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="fl">1</span>, <span class="fl">2</span>, <span class="fl">5</span>)
-    <span class="kw">for</span> (<span class="no">i</span> <span class="kw">in</span> <span class="fl">1</span>:<span class="fu"><a href="https://rdrr.io/r/base/nrow.html">nrow</a></span>(<span class="no">gen_grp</span>)) {
-         <span class="no">ind</span> <span class="kw">&lt;-</span> <span class="no">sex_init</span> <span class="kw">==</span> <span class="no">gen_grp</span>[<span class="no">i</span>,<span class="fl">1</span>] <span class="kw">&amp;</span> <span class="no">age_init_grp</span> <span class="kw">==</span> <span class="no">gen_grp</span>[<span class="no">i</span>,<span class="fl">2</span>]
-         <span class="no">Y</span> <span class="kw">&lt;-</span> <span class="no">X</span>[<span class="no">ind</span>,<span class="no">adjust</span>]
-         <span class="no">X</span>[<span class="no">ind</span>,<span class="no">adjust</span>] <span class="kw">&lt;-</span> <span class="no">Y</span> - <span class="fu"><a href="https://rdrr.io/r/base/colSums.html">colMeans</a></span>(<span class="no">Y</span>)[<span class="fu"><a href="https://rdrr.io/r/base/col.html">col</a></span>(<span class="no">Y</span>)] + <span class="no">gen_grp</span>[<span class="no">i</span>,<span class="fl">2</span> + <span class="no">adjust</span>][<span class="fu"><a href="https://rdrr.io/r/base/col.html">col</a></span>(<span class="no">Y</span>)]
-    }
-
     <span class="co"># Limits data to values that have been actually observed</span>
-    <span class="no">bmi</span> <span class="kw">&lt;-</span> <span class="fu">impose_limits</span>(<span class="no">X</span>[,<span class="fl">1</span>], <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="fl">16</span>, <span class="fl">72.5</span>))
-    <span class="no">waist_circumference</span> <span class="kw">&lt;-</span> <span class="fu">impose_limits</span>(<span class="no">X</span>[,<span class="fl">2</span>], <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="fl">50</span>, <span class="fl">152</span>))
-    <span class="no">cholesterol</span> <span class="kw">&lt;-</span> <span class="fu">impose_limits</span>(<span class="no">X</span>[,<span class="fl">3</span>], <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="fl">2.5</span>, <span class="fl">11.5</span>))
-    <span class="no">hdl_cholesterol</span> <span class="kw">&lt;-</span> <span class="fu">impose_limits</span>(<span class="no">X</span>[,<span class="fl">4</span>], <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="fl">0.37</span>, <span class="fl">3.62</span>))
-    <span class="no">blood_pressure</span> <span class="kw">&lt;-</span> <span class="fu">impose_limits</span>(<span class="no">X</span>[,<span class="fl">5</span>], <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="fl">78</span>, <span class="fl">252</span>))
+    <span class="no">X</span> <span class="kw">&lt;-</span> <span class="fu">impose_limits</span>(<span class="no">X</span>, <span class="no">sex</span>, <span class="no">smoking</span>, <span class="no">age_mon</span>,
+                       <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span>(<span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="fl">16</span>, <span class="fl">72.5</span>), <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="fl">50</span>, <span class="fl">152</span>), <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="fl">2.5</span>, <span class="fl">11.5</span>), <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="fl">0.37</span>, <span class="fl">3.62</span>), <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="fl">78</span>, <span class="fl">252</span>)))
+
+    <span class="no">bmi</span> <span class="kw">&lt;-</span> <span class="no">X</span>[,<span class="fl">1</span>]
+    <span class="no">waist_circumference</span> <span class="kw">&lt;-</span> <span class="no">X</span>[,<span class="fl">2</span>]
+    <span class="no">cholesterol</span> <span class="kw">&lt;-</span> <span class="no">X</span>[,<span class="fl">3</span>]
+    <span class="no">hdl_cholesterol</span> <span class="kw">&lt;-</span> <span class="no">X</span>[,<span class="fl">4</span>]
+    <span class="no">blood_pressure</span> <span class="kw">&lt;-</span> <span class="no">X</span>[,<span class="fl">5</span>]
+
+    <span class="co"># Generating diabetes status based on FINDRISC risk score</span>
+    <span class="no">diabetes_par</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(-<span class="fl">5.514</span>, <span class="fl">0.628</span>, <span class="fl">0.892</span>, <span class="fl">0.165</span>, <span class="fl">1.096</span>, <span class="fl">0.857</span>, <span class="fl">1.350</span>, <span class="fl">2.139</span>)
+    <span class="no">D</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html">matrix</a></span>(<span class="fl">0</span>, <span class="no">n</span>, <span class="fl">8</span>)
+    <span class="no">D</span>[,<span class="fl">1</span>] <span class="kw">&lt;-</span> <span class="fl">1</span>
+    <span class="no">D</span>[,<span class="fl">2</span>] <span class="kw">&lt;-</span> (<span class="no">age</span> <span class="kw">&gt;=</span> <span class="fl">45</span> <span class="kw">&amp;</span> <span class="no">age</span> <span class="kw">&lt;</span> <span class="fl">54</span>)
+    <span class="no">D</span>[,<span class="fl">3</span>] <span class="kw">&lt;-</span> (<span class="no">age</span> <span class="kw">&gt;=</span> <span class="fl">54</span>)
+    <span class="no">D</span>[,<span class="fl">4</span>] <span class="kw">&lt;-</span> (<span class="no">bmi</span> <span class="kw">&gt;</span> <span class="fl">25</span> <span class="kw">&amp;</span> <span class="no">bmi</span> <span class="kw">&lt;=</span> <span class="fl">30</span>)
+    <span class="no">D</span>[,<span class="fl">5</span>] <span class="kw">&lt;-</span> (<span class="no">bmi</span> <span class="kw">&gt;</span> <span class="fl">30</span>)
+    <span class="no">D</span>[,<span class="fl">6</span>] <span class="kw">&lt;-</span> (<span class="no">sex</span> <span class="kw">==</span> <span class="fl">0L</span>) * (<span class="no">waist_circumference</span> <span class="kw">&gt;=</span> <span class="fl">94</span> <span class="kw">&amp;</span> <span class="no">waist_circumference</span> <span class="kw">&lt;</span> <span class="fl">102</span>) +
+             (<span class="no">sex</span> <span class="kw">==</span> <span class="fl">1L</span>) * (<span class="no">waist_circumference</span> <span class="kw">&gt;=</span> <span class="fl">80</span> <span class="kw">&amp;</span> <span class="no">waist_circumference</span> <span class="kw">&lt;</span> <span class="fl">88</span>)
+    <span class="no">D</span>[,<span class="fl">7</span>] <span class="kw">&lt;-</span> (<span class="no">sex</span> <span class="kw">==</span> <span class="fl">0L</span>) * (<span class="no">waist_circumference</span> <span class="kw">&gt;=</span> <span class="fl">102</span>) +
+             (<span class="no">sex</span> <span class="kw">==</span> <span class="fl">1L</span>) * (<span class="no">waist_circumference</span> <span class="kw">&gt;=</span> <span class="fl">88</span>)
+    <span class="no">D</span>[,<span class="fl">8</span>] <span class="kw">&lt;-</span> <span class="no">high_glucose</span>
+    <span class="no">diabetes_risk</span> <span class="kw">&lt;-</span> <span class="fu">expit</span>(<span class="fu"><a href="https://rdrr.io/r/base/numeric.html">as.numeric</a></span>(<span class="no">D</span> <span class="kw">%*%</span> <span class="no">diabetes_par</span>))
+    <span class="no">diabetes_risk</span>[<span class="no">sex</span> <span class="kw">==</span> <span class="fl">0L</span>] <span class="kw">&lt;-</span> <span class="no">diabetes_risk</span>[<span class="no">sex</span> <span class="kw">==</span> <span class="fl">0L</span>] / <span class="fu"><a href="https://rdrr.io/r/base/mean.html">mean</a></span>(<span class="no">diabetes_risk</span>[<span class="no">sex</span> <span class="kw">==</span> <span class="fl">0L</span>]) * <span class="fl">0.15</span>
+    <span class="no">diabetes_risk</span>[<span class="no">sex</span> <span class="kw">==</span> <span class="fl">1L</span>] <span class="kw">&lt;-</span> <span class="no">diabetes_risk</span>[<span class="no">sex</span> <span class="kw">==</span> <span class="fl">1L</span>] / <span class="fu"><a href="https://rdrr.io/r/base/mean.html">mean</a></span>(<span class="no">diabetes_risk</span>[<span class="no">sex</span> <span class="kw">==</span> <span class="fl">1L</span>]) * <span class="fl">0.10</span>
+    <span class="no">diabetes</span> <span class="kw">&lt;-</span> <span class="fu">rbern</span>(<span class="no">diabetes_risk</span>)
 
     <span class="fu"><a href="https://rdrr.io/r/base/function.html">return</a></span>(<span class="fu"><a href="https://Rdatatable.gitlab.io/data.table/reference/data.table.html">data.table</a></span>(
         <span class="kw">alive</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html">rep</a></span>(<span class="fl">1L</span>, <span class="no">n</span>),
-        <span class="kw">age</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/double.html">as.double</a></span>(<span class="no">age_init</span>),
-        <span class="kw">age_at_start</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/double.html">as.double</a></span>(<span class="no">age_init</span>),
+        <span class="kw">age</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/double.html">as.double</a></span>(<span class="no">age</span>),
+        <span class="kw">age_at_start</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/double.html">as.double</a></span>(<span class="no">age</span>),
         <span class="kw">age_at_stroke</span> <span class="kw">=</span> <span class="no">age_at_stroke</span>,
-        <span class="kw">sex</span> <span class="kw">=</span> <span class="no">sex_init</span>,
+        <span class="kw">sex</span> <span class="kw">=</span> <span class="no">sex</span>,
         <span class="kw">smoking</span> <span class="kw">=</span> <span class="no">smoking</span>,
         <span class="kw">diabetes</span> <span class="kw">=</span> <span class="no">diabetes</span>,
         <span class="kw">parent_stroke</span> <span class="kw">=</span> <span class="no">parent_stroke</span>,
@@ -548,7 +612,7 @@
 <h2 class="hasAnchor">
 <a href="#utility-functions" class="anchor"></a>Utility functions</h2>
 <p>The file <code>DiabetesAndStrokeFunctions.R</code> provides a set of useful functions used in defining events and the initial data</p>
-<div class="sourceCode" id="cb4"><html><body><pre class="r"><span class="co">## Bernoulli distribution with probability of success (1) 'prob' (vectorized over prob)</span>
+<div class="sourceCode"><html><body><pre class="r"><span class="co">## Bernoulli distribution with probability of success (1) 'prob' (vectorized over prob)</span>
 
 <span class="no">rbern</span> <span class="kw">&lt;-</span> <span class="kw">function</span>(<span class="no">prob</span>) {
     <span class="fu"><a href="https://rdrr.io/r/base/function.html">return</a></span>(<span class="fu"><a href="https://Rdatatable.gitlab.io/data.table/reference/fifelse.html">ifelse</a></span>(<span class="kw pkg">dqrng</span><span class="kw ns">::</span><span class="fu"><a href="https://rdrr.io/pkg/dqrng/man/dqrng-functions.html">dqrunif</a></span>(<span class="fu"><a href="https://rdrr.io/r/base/length.html">length</a></span>(<span class="no">prob</span>)) <span class="kw">&lt;</span> <span class="no">prob</span>, <span class="fl">1L</span>, <span class="fl">0L</span>))
@@ -594,14 +658,28 @@
 }
 
 <span class="co">## Function to resample values within an allowed range</span>
-<span class="co">## x      : a vector of values</span>
-<span class="co">## limits : the range of allowed values</span>
+<span class="co">## X       : a matrix of values</span>
+<span class="co">## sex     : a vector of sex indicators</span>
+<span class="co">## smoking : a vector of smoking indicators</span>
+<span class="co">## age     : a vector of age groups</span>
+<span class="co">## limits  : a list of allowed ranges for column of 'X'</span>
 
-<span class="no">impose_limits</span> <span class="kw">&lt;-</span> <span class="kw">function</span>(<span class="no">x</span>, <span class="no">limits</span>) {
-    <span class="no">out</span> <span class="kw">&lt;-</span> <span class="no">x</span> <span class="kw">&lt;</span> <span class="no">limits</span>[<span class="fl">1</span>] <span class="kw">|</span> <span class="no">x</span> <span class="kw">&gt;</span> <span class="no">limits</span>[<span class="fl">2</span>]
-    <span class="no">bound</span> <span class="kw">&lt;-</span> !<span class="no">out</span>
-    <span class="no">x</span>[<span class="no">out</span>] <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/sample.html">sample</a></span>(<span class="no">x</span>[<span class="no">bound</span>], <span class="fu"><a href="https://rdrr.io/r/base/sum.html">sum</a></span>(<span class="no">out</span>), <span class="kw">replace</span> <span class="kw">=</span> <span class="fl">TRUE</span>)
-    <span class="fu"><a href="https://rdrr.io/r/base/function.html">return</a></span>(<span class="no">x</span>)
+<span class="no">impose_limits</span> <span class="kw">&lt;-</span> <span class="kw">function</span>(<span class="no">X</span>, <span class="no">sex</span>, <span class="no">smoking</span>, <span class="no">age</span>, <span class="no">limits</span>) {
+    <span class="no">age</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/numeric.html">as.numeric</a></span>(<span class="no">age</span>)
+    <span class="no">groups</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/expand.grid.html">expand.grid</a></span>(<span class="fu"><a href="https://Rdatatable.gitlab.io/data.table/reference/duplicated.html">unique</a></span>(<span class="no">sex</span>), <span class="fu"><a href="https://Rdatatable.gitlab.io/data.table/reference/duplicated.html">unique</a></span>(<span class="no">smoking</span>), <span class="fu"><a href="https://Rdatatable.gitlab.io/data.table/reference/duplicated.html">unique</a></span>(<span class="no">age</span>))
+    <span class="kw">for</span> (<span class="no">i</span> <span class="kw">in</span> <span class="fl">1</span>:<span class="fu"><a href="https://rdrr.io/r/base/nrow.html">nrow</a></span>(<span class="no">groups</span>)) {
+        <span class="no">g</span> <span class="kw">&lt;-</span> <span class="no">sex</span> <span class="kw">==</span> <span class="no">groups</span>[<span class="no">i</span>,<span class="fl">1</span>] <span class="kw">&amp;</span> <span class="no">smoking</span> <span class="kw">==</span> <span class="no">groups</span>[<span class="no">i</span>,<span class="fl">2</span>] <span class="kw">&amp;</span> <span class="no">age</span> <span class="kw">==</span> <span class="no">groups</span>[<span class="no">i</span>,<span class="fl">3</span>]
+        <span class="kw">for</span> (<span class="no">j</span> <span class="kw">in</span> <span class="fl">1</span>:<span class="fu"><a href="https://rdrr.io/r/base/nrow.html">ncol</a></span>(<span class="no">X</span>)) {
+            <span class="no">out</span> <span class="kw">&lt;-</span> <span class="no">X</span>[<span class="no">g</span>,<span class="no">j</span>] <span class="kw">&lt;</span> <span class="no">limits</span><span class="kw">[[</span><span class="no">j</span>]][<span class="fl">1</span>] <span class="kw">|</span> <span class="no">X</span>[<span class="no">g</span>,<span class="no">j</span>] <span class="kw">&gt;</span> <span class="no">limits</span><span class="kw">[[</span><span class="no">j</span>]][<span class="fl">2</span>]
+            <span class="no">bound</span> <span class="kw">&lt;-</span> !<span class="no">out</span>
+            <span class="no">g_out</span> <span class="kw">&lt;-</span> <span class="no">g</span>
+            <span class="no">g_out</span>[<span class="no">g</span>] <span class="kw">&lt;-</span> <span class="no">out</span>
+            <span class="no">g_bound</span> <span class="kw">&lt;-</span> <span class="no">g</span>
+            <span class="no">g_bound</span>[<span class="no">g</span>] <span class="kw">&lt;-</span> !<span class="no">out</span>
+            <span class="no">X</span>[<span class="no">g_out</span>,<span class="no">j</span>] <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/sample.html">sample</a></span>(<span class="no">X</span>[<span class="no">g_bound</span>,<span class="no">j</span>], <span class="fu"><a href="https://rdrr.io/r/base/sum.html">sum</a></span>(<span class="no">out</span>), <span class="kw">replace</span> <span class="kw">=</span> <span class="fl">TRUE</span>)
+        }
+    }
+    <span class="fu"><a href="https://rdrr.io/r/base/function.html">return</a></span>(<span class="no">X</span>)
 }
 
 <span class="co">## Objective function to calibrate total mortality to mortality of the Finnish population</span>
@@ -611,10 +689,13 @@
     <span class="no">mortality</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/utils/read.table.html">read.csv</a></span>(<span class="kw">file</span> <span class="kw">=</span> <span class="st">"data/kuol_007_201700.csv"</span>, <span class="kw">header</span> <span class="kw">=</span> <span class="fl">TRUE</span>, <span class="kw">sep</span> <span class="kw">=</span> <span class="st">","</span>)
     <span class="no">mortality</span>[,<span class="fl">3</span>] <span class="kw">&lt;-</span> <span class="no">mortality</span>[,<span class="fl">3</span>]/<span class="fl">1000</span>
     <span class="no">n</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/nrow.html">nrow</a></span>(<span class="no">mortality</span>)
-    <span class="co"># Impute 100-year-olds from 99</span>
-    <span class="no">mortality</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://Rdatatable.gitlab.io/data.table/reference/rbindlist.html">rbind</a></span>(<span class="no">mortality</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="fl">100</span>, <span class="fl">2017</span>, <span class="fl">2</span> * <span class="no">mortality</span>[<span class="no">n</span>,<span class="fl">3</span>] - <span class="no">mortality</span>[<span class="no">n</span>-<span class="fl">1</span>,<span class="fl">3</span>]))
-    <span class="no">p</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span>(<span class="st">"Other Mortality"</span> <span class="kw">=</span> <span class="no">x</span>[<span class="fl">1</span>:<span class="fl">2</span>])
-    <span class="no">out</span> <span class="kw">&lt;-</span> <span class="no">sim</span>$<span class="fu">configure</span>(<span class="kw">t_sim</span> <span class="kw">=</span> <span class="fl">364</span>, <span class="kw">p</span> <span class="kw">=</span> <span class="no">p</span>, <span class="kw">output_function</span> <span class="kw">=</span> <span class="no">mortality_df</span>, <span class="kw">min_age</span> <span class="kw">=</span> <span class="fl">30</span>)
+    <span class="no">mortality</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://Rdatatable.gitlab.io/data.table/reference/rbindlist.html">rbind</a></span>(<span class="no">mortality</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="fl">100</span>, <span class="fl">2017</span>, <span class="fl">2</span> * <span class="no">mortality</span>[<span class="no">n</span>,<span class="fl">3</span>] - <span class="no">mortality</span>[<span class="no">n</span>-<span class="fl">1</span>,<span class="fl">3</span>])) <span class="co"># Impute 100-year-olds from 99</span>
+    <span class="no">p</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span>(<span class="st">"Other Mortality"</span> <span class="kw">=</span> <span class="no">x</span>[<span class="fl">1</span>:<span class="fl">2</span>], <span class="st">"Stroke Mortality"</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span>(<span class="no">x</span>[<span class="fl">3</span>], <span class="fl">1</span>))
+    <span class="no">calib_res</span> <span class="kw">&lt;-</span> <span class="no">sim</span>$<span class="fu">configure</span>(<span class="kw">t_sim</span> <span class="kw">=</span> <span class="fl">364</span>, <span class="kw">p</span> <span class="kw">=</span> <span class="no">p</span>, <span class="kw">output</span> <span class="kw">=</span> <span class="no">mortality_df</span>, <span class="kw">min_age</span> <span class="kw">=</span> <span class="fl">30</span>)
+    <span class="no">out</span> <span class="kw">&lt;-</span> <span class="no">calib_res</span>$<span class="no">out</span>
+    <span class="no">stroke_prop</span> <span class="kw">&lt;-</span> <span class="no">calib_res</span>$<span class="no">stroke_prop</span>
+    <span class="no">s_obj</span> <span class="kw">&lt;-</span> <span class="fl">1e7</span>
+    <span class="kw">if</span> (<span class="no">stroke_prop</span> <span class="kw">&gt;</span> <span class="fl">0</span>) <span class="no">s_obj</span> <span class="kw">&lt;-</span> <span class="fl">2000</span> * (<span class="fu"><a href="https://rdrr.io/r/base/Log.html">log</a></span>(<span class="no">stroke_prop</span>) - <span class="fu"><a href="https://rdrr.io/r/base/Log.html">log</a></span>(<span class="fl">0.07534936</span>))^<span class="fl">2</span>
     <span class="no">mortality</span> <span class="kw">&lt;-</span> <span class="no">mortality</span>[<span class="no">mortality</span>$<span class="no">Age</span> <span class="kw">%in%</span> <span class="no">out</span>$<span class="no">age_group</span>,]
     <span class="no">w</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html">rep</a></span>(<span class="fl">1</span>, <span class="fu"><a href="https://rdrr.io/r/base/nrow.html">nrow</a></span>(<span class="no">out</span>))
     <span class="no">w</span>[<span class="no">out</span>$<span class="no">age_group</span> <span class="kw">&gt;=</span> <span class="fl">80</span>] <span class="kw">&lt;-</span> <span class="fl">100</span> <span class="co"># Weight for mortalities &gt;= 60, fit should be better here</span>
@@ -624,7 +705,7 @@
     <span class="no">obj</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html">sum</a></span>(<span class="no">w</span>[<span class="no">valid</span>] * (<span class="fu"><a href="https://rdrr.io/r/base/Log.html">log</a></span>(<span class="no">mortality</span>[<span class="no">valid</span>,<span class="fl">3</span>]) - <span class="fu"><a href="https://rdrr.io/r/base/Log.html">log</a></span>(<span class="no">out</span>[<span class="no">valid</span>,<span class="fl">1</span>]/<span class="no">out</span>[<span class="no">valid</span>,<span class="fl">2</span>]))^<span class="fl">2</span>)
     <span class="no">obj</span> <span class="kw">&lt;-</span> <span class="no">obj</span> + <span class="fu"><a href="https://rdrr.io/r/base/sum.html">sum</a></span>(<span class="no">w</span>[<span class="no">all_dead</span>] * <span class="fu"><a href="https://rdrr.io/r/base/Log.html">log</a></span>(<span class="no">mortality</span>[<span class="no">all_dead</span>,<span class="fl">3</span>])^<span class="fl">2</span>)
     <span class="no">obj</span> <span class="kw">&lt;-</span> <span class="no">obj</span> + <span class="fu"><a href="https://rdrr.io/r/base/sum.html">sum</a></span>(<span class="no">w</span>[<span class="no">all_alive</span>] * <span class="fu"><a href="https://rdrr.io/r/base/Log.html">log</a></span>(<span class="no">mortality</span>[<span class="no">all_alive</span>,<span class="fl">3</span>])^<span class="fl">2</span>)
-    <span class="fu"><a href="https://rdrr.io/r/base/function.html">return</a></span>(<span class="no">obj</span>)
+    <span class="fu"><a href="https://rdrr.io/r/base/function.html">return</a></span>(<span class="no">obj</span> + <span class="no">s_obj</span>)
 }
 
 <span class="co">## A function used to calibrate total mortality</span>
@@ -643,7 +724,8 @@
         <span class="no">out</span>[<span class="no">deaths</span>$<span class="no">age_group</span> + <span class="fl">1</span>,<span class="st">"deaths"</span>] <span class="kw">&lt;-</span> <span class="no">deaths</span>$<span class="no">N</span>
     }
     <span class="no">out</span> <span class="kw">&lt;-</span> <span class="no">out</span>[<span class="no">out</span>$<span class="no">age_group</span> <span class="kw">&gt;=</span> <span class="no">min_age</span>, ]
-    <span class="fu"><a href="https://rdrr.io/r/base/function.html">return</a></span>(<span class="no">out</span>)
+    <span class="no">stroke_prop</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/nrow.html">nrow</a></span>(<span class="no">dt</span>[<span class="no">alive</span> <span class="kw">==</span> <span class="fl">0</span> <span class="kw">&amp;</span> <span class="no">has_cardio</span> <span class="kw">==</span> <span class="fl">1</span> <span class="kw">&amp;</span> (<span class="no">age</span> - <span class="no">cardio_disease</span>) <span class="kw">&lt;</span> (<span class="fl">28</span>/<span class="fl">365</span>),]) / <span class="fu"><a href="https://rdrr.io/r/base/nrow.html">nrow</a></span>(<span class="no">dt</span>[<span class="no">alive</span> <span class="kw">==</span> <span class="fl">0</span>,])
+    <span class="fu"><a href="https://rdrr.io/r/base/function.html">return</a></span>(<span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span>(<span class="kw">out</span> <span class="kw">=</span> <span class="no">out</span>, <span class="kw">stroke_prop</span> <span class="kw">=</span> <span class="no">stroke_prop</span>))
 }</pre></body></html></div>
 </div>
   </div>

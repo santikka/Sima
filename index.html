@@ -31,7 +31,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="index.html">Sima</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.5.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.5.1</span>
       </span>
     </div>
 
@@ -89,16 +89,16 @@
 <h2 class="hasAnchor">
 <a href="#installation" class="anchor"></a>Installation</h2>
 <p>Install the released version of the framework from CRAN:</p>
-<div class="sourceCode" id="cb1"><pre class="r"><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html">install.packages</a></span>(<span class="st">"Sima"</span>)</pre></div>
+<div class="sourceCode"><pre class="r"><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html">install.packages</a></span>(<span class="st">"Sima"</span>)</pre></div>
 <p>Alternatively, install the development version from GitHub:</p>
-<div class="sourceCode" id="cb2"><pre class="r"><span class="co"># install.packages("devtools")</span>
+<div class="sourceCode"><pre class="r"><span class="co"># install.packages("devtools")</span>
 <span class="kw pkg">devtools</span><span class="kw ns">::</span><span class="fu"><a href="https://devtools.r-lib.org//reference/remote-reexports.html">install_github</a></span>(<span class="st">"santikk/Sima"</span>)</pre></div>
 </div>
 <div id="usage" class="section level2">
 <h2 class="hasAnchor">
 <a href="#usage" class="anchor"></a>Usage</h2>
 <p>A simulator consists of events and an initial population. Events come in two types of R6 class objects, known as manipulation events and accumulation events. Manipulation events modify the status of initial population whereas accumulation events introduce new individuals into the population. The population itself is contained in a <code>data.table</code> and can be either entirely synthetic or based on real data. To construct a simulator, first define the events governing the system of interest and the initial population.</p>
-<p>Read <code>vignette("Sima")</code> for more details on how to construct a simulator for your purposes.</p>
+<p>Read <code><a href="articles/Sima.html">vignette("Sima")</a></code> for more details on how to construct a simulator for your purposes.</p>
 </div>
 </div>
   </div>
