@@ -384,8 +384,8 @@
 <span class="co"># Apply each scenario and record the results</span>
 <span class="co"># -- N : simulation time for each scenario</span>
 <span class="co"># -- M : number of replications for each scenario</span>
-<span class="va">N</span> <span class="op">&lt;-</span> <span class="fl">1</span> <span class="op">*</span> <span class="fl">365</span>
-<span class="va">M</span> <span class="op">&lt;-</span> <span class="fl">2</span>
+<span class="va">N</span> <span class="op">&lt;-</span> <span class="fl">10</span> <span class="op">*</span> <span class="fl">365</span>
+<span class="va">M</span> <span class="op">&lt;-</span> <span class="fl">100</span>
 <span class="va">I</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/length.html">length</a></span><span class="op">(</span><span class="va">interventions</span><span class="op">)</span>
 <span class="va">init_stroke</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html">sum</a></span><span class="op">(</span><span class="va">sim</span><span class="op">$</span><span class="fu">get_status</span><span class="op">(</span><span class="op">)</span><span class="op">$</span><span class="va">stroke</span><span class="op">)</span>
 <span class="va">new_stroke</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html">matrix</a></span><span class="op">(</span><span class="fl">0</span>, <span class="va">M</span>, <span class="va">I</span><span class="op">)</span>
