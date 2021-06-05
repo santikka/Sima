@@ -1,0 +1,41 @@
+---
+title: "Sick-sicker model"
+output: rmarkdown::html_vignette
+description: >
+    In this example we re-implement the sick-sicker model that appears in
+    Krijkamp EM, Alarid-Escudero F, Enns EA, Jalal HJ, Hunink MGM, Pechlivanoglou P. 
+    Microsimulation modeling for health decision sciences using R: 
+    A tutorial. Med Decis Making. 2018;38(3):400–22.
+vignette: >
+    %\VignetteIndexEntry{Sick-sicker model}
+    %\VignetteEngine{knitr::rmarkdown}
+    %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+    collapse = TRUE,
+    comment = "#>"
+)
+```
+
+In this example we consider a simple scenario where a person can occupy
+one of four states: healthy, sick, sicker and dead. At each iteration,
+we compute the transition probabilities in the population and change the
+state accordingly. In addition, there are costs and quality adjusted life years 
+associated with each state.
+
+For more information and details about the model, please refer to the original article:
+Krijkamp EM, Alarid-Escudero F, Enns EA, Jalal HJ, Hunink MGM, Pechlivanoglou P. 
+Microsimulation modeling for health decision sciences using R: A tutorial.
+*Med Decis Making.* 2018;**38(3)**:400–22.
+
+The code used for comparative performance purposes can be found on GitHub:
+https://github.com/DARTH-git/Microsimulation-tutorial
+
+## R-code
+Here we provide the R-code for implementing the model in the Sima framework.
+We also see that the performance of Sima in this example is superior.
+
+```{r, eval = FALSE, code = xfun::read_utf8('../../../examples/sick_sicker_comparison/sick_sicker_comparison.R')}
+```

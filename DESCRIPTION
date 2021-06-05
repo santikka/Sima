@@ -31,7 +31,7 @@ License: GPL (>= 2)
 URL: https://santikk.github.io/Sima, https://github.com/santikk/Sima
 BugReports: https://github.com/santikk/Sima/issues
 Imports: R6, data.table, dqrng
-Suggests: knitr, doMPI, Rmpi, foreach, iterators
+Suggests: knitr, rmarkdown, doMPI, Rmpi, foreach, iterators
 VignetteBuilder: knitr
 NeedsCompilation: no
 Maintainer: Santtu Tikka <santtuth@gmail.com>

@@ -1,11 +1,11 @@
 ---
-title: "Example with diabetes and stroke"
+title: "Diabetes and stroke example"
 output: rmarkdown::html_vignette
 description: >
     An example use case of the simulation framework for modeling the incidence 
     of diabetes and stroke, and mortality with interventions
 vignette: >
-    %\VignetteIndexEntry{Example with diabetes and stroke}
+    %\VignetteIndexEntry{Diabetes and stroke example}
     %\VignetteEngine{knitr::rmarkdown}
     %\VignetteEncoding{UTF-8}
 ---

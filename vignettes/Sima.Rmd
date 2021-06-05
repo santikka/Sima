@@ -128,7 +128,7 @@ Here, `N` is an integer value indicating the length of the simulation. The curre
 
 The simulator can be configured to take advantage of multiple computing cores via the class method `start_cluster`. 
 ```{r, eval = FALSE}
-Simulator$start_cluster(cl, nc, export, packages, interface = c("doParallel", "doMPI"e)
+Simulator$start_cluster(cl, nc, export, packages, interface = c("doParallel", "doMPI"))
 ```
 The arguments are:
 
