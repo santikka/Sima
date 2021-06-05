@@ -14,11 +14,16 @@ Provides methods for initializing the synthetic population, parallel simulation,
 \item \href{#method-start_cluster}{\code{Simulator$start_cluster()}}
 \item \href{#method-stop_cluster}{\code{Simulator$stop_cluster()}}
 \item \href{#method-run}{\code{Simulator$run()}}
+\item \href{#method-run_scenarios}{\code{Simulator$run_scenarios()}}
 \item \href{#method-reconfigure}{\code{Simulator$reconfigure()}}
 \item \href{#method-configure}{\code{Simulator$configure()}}
-\item \href{#method-get_population}{\code{Simulator$get_population()}}
+\item \href{#method-intervene}{\code{Simulator$intervene()}}
+\item \href{#method-get_status}{\code{Simulator$get_status()}}
+\item \href{#method-get_init}{\code{Simulator$get_init()}}
 \item \href{#method-get_sample}{\code{Simulator$get_sample()}}
+\item \href{#method-get_history}{\code{Simulator$get_history()}}
 \item \href{#method-initialize_monitor}{\code{Simulator$initialize_monitor()}}
+\item \href{#method-reset}{\code{Simulator$reset()}}
 \item \href{#method-clone}{\code{Simulator$clone()}}
 }
 }
@@ -30,33 +35,34 @@ Create a new Simulator object.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{Simulator$new(
   initializer = NULL,
-  manipulation_events = list(),
-  accumulation_events = list(),
-  time = Time$new("day", Sys.Date()),
-  n,
-  seeds = 123
+  acc_events = list(),
+  man_events = list(),
+  seeds = 123,
+  keep_init = FALSE,
+  ...
 )}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{initializer}}{A function to generate the initial population.}
+\item{\code{initializer}}{A function that generates the initial population.}
 
-\item{\code{manipulation_events}}{A list of ManipulationEvent objects.}
+\item{\code{acc_events}}{A list of AccumulationEvent objects.}
 
-\item{\code{accumulation_events}}{A list of AccumulationEvent objects.}
-
-\item{\code{time}}{A Time object.}
-
-\item{\code{n}}{Size of the initial population.}
+\item{\code{man_events}}{A list of ManipulationEvent objects.}
 
 \item{\code{seeds}}{Seed values for random number generation.}
+
+\item{\code{keep_init}}{A logical value indicating whether the initial status should be stored.
+If \code{TRUE} the initial population can be retrieved with the method get_init.}
+
+\item{\code{...}}{Additional arguments to \code{initializer},}
 }
 \if{html}{\out{</div>}}
 }
 \subsection{Returns}{
-A new \code{\link{Simulator}} object.
+A new \code{Simulator} object.
 }
 }
 \if{html}{\out{<hr>}}
@@ -65,7 +71,13 @@ A new \code{\link{Simulator}} object.
 \subsection{Method \code{start_cluster()}}{
 Start a parallel computation cluster.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Simulator$start_cluster(cl, nc, export, packages, interface = "doParallel")}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{Simulator$start_cluster(
+  cl,
+  nc,
+  export,
+  packages,
+  interface = c("doParallel", "doMPI")
+)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -100,13 +112,17 @@ Stop a parallel computation cluster.
 \subsection{Method \code{run()}}{
 Progress the simulation.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Simulator$run(t_sim)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{Simulator$run(N, show_progress = TRUE)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{t_sim}}{A numeric value indicating the length of time to process.}
+\item{\code{N}}{An integer indicating the length of the simulation.}
+
+\item{\code{show_progress}}{A logical value.
+If \code{TRUE} shows a progress bar that tracks the completion of the simulation
+(for non-parallel computations only)}
 
 \item{\code{unit}}{A character string giving the time unit that \code{t_sim} corresponds to.}
 }
@@ -114,27 +130,72 @@ Progress the simulation.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-reconfigure"></a>}}
-\if{latex}{\out{\hypertarget{method-reconfigure}{}}}
-\subsection{Method \code{reconfigure()}}{
-Configure the parameters of Event objects.
+\if{html}{\out{<a id="method-run_scenarios"></a>}}
+\if{latex}{\out{\hypertarget{method-run_scenarios}{}}}
+\subsection{Method \code{run_scenarios()}}{
+Run various scenarios with the same initial population using different interventions with replications.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Simulator$reconfigure(p)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{Simulator$run_scenarios(
+  interventions,
+  replications,
+  N,
+  seeds_override = NULL,
+  output,
+  ...
+)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{p}}{A named list of parameters, see 'details'.}
+\item{\code{interventions}}{A list of interventions corresponding to the scenarios to run, see 'details'.}
+
+\item{\code{replications}}{An integer describing how many times each scenario should be replicated.}
+
+\item{\code{N}}{A single integer or an integer vector describing the simulation runtime for each scenario.}
+
+\item{\code{seeds_override}}{If \code{NULL}, a different seed is automatically used for each scenario.
+If provided, should be an integer matrix with \code{replications} rows and \code{length(interventions)} columns.}
+
+\item{\code{output}}{A function to apply to the population after each scenario.}
+
+\item{\code{...}}{Additional arguments passed to \code{output}.}
 }
 \if{html}{\out{</div>}}
 }
 \subsection{Details}{
-The parameter list \code{p} should be structured as follows:
-Each element should be named with a name of an event object.
-Each element should be a list with two elements, one with
-the parameters values and the second of equal length
-giving the indices which to replace.
+Each element of \code{interventions} should be a named list with the following elements:
+\code{acc_events}, \code{acc_pars}, \code{man_events}, \code{man_pars} and \code{pars}.
+The element \code{acc_events} should be a list of objects of class \code{AccumulationEvent} and
+\code{acc_pars} should be a list of the same length of numeric vectors giving the parameter values for these events.
+Similarly, \code{man_events} should be a list of object of class \code{ManipulationEvent} with \code{man_pars}
+being a list of the same length of numeric vectors giving the parameter values.
+Finally, \code{pars} should be a list of parameter values (see \code{configure}).
+For additional details, see \code{intervene}.
+}
+
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-reconfigure"></a>}}
+\if{latex}{\out{\hypertarget{method-reconfigure}{}}}
+\subsection{Method \code{reconfigure()}}{
+Configure the parameters of Event objects.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{Simulator$reconfigure(pars)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{pars}}{A named list of parameters, see 'details'.}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Details}{
+The parameter list \code{pars} should be structured as follows:
+Each element should have a name of an Event object and each
+element should be a named list where the names correspond
+to the names of the parameters of whose values are to be configured.
 }
 
 }
@@ -142,17 +203,18 @@ giving the indices which to replace.
 \if{html}{\out{<a id="method-configure"></a>}}
 \if{latex}{\out{\hypertarget{method-configure}{}}}
 \subsection{Method \code{configure()}}{
-Configure events, run a simulation and compute a summary statistic for calibration. The original status is restored after completion.
+Configure events, run a simulation and compute a summary statistic for calibration.
+The original status is restored after completion.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Simulator$configure(t_sim, p, output, seeds = 123, ...)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{Simulator$configure(N, pars, output, seeds = 123, ...)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{t_sim}}{A numeric value indicating the length of time to process.}
+\item{\code{N}}{A numeric value indicating the length of the simulation}
 
-\item{\code{p}}{A list of parameter values, see 'details'.}
+\item{\code{pars}}{A list of parameter values, see 'details'.}
 
 \item{\code{output}}{A function that computes a summary statistic from the simulation.}
 
@@ -163,11 +225,10 @@ Configure events, run a simulation and compute a summary statistic for calibrati
 \if{html}{\out{</div>}}
 }
 \subsection{Details}{
-The parameter list \code{p} should be structured as follows:
-Each element should be named with a name of an event object.
-Each element should be a list with two elements, one with
-the parameters values and the second of equal length
-giving the indices which to replace.
+The parameter list \code{pars} should be structured as follows:
+Each element should have a name of an Event object and each
+element should be a named list where the names correspond
+to the names of the parameters of whose values are to be configured.
 }
 
 \subsection{Returns}{
@@ -175,22 +236,73 @@ The output of \code{output_function} evaluated for the resulting population.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-get_population"></a>}}
-\if{latex}{\out{\hypertarget{method-get_population}{}}}
-\subsection{Method \code{get_population()}}{
-Get the status of the current population
+\if{html}{\out{<a id="method-intervene"></a>}}
+\if{latex}{\out{\hypertarget{method-intervene}{}}}
+\subsection{Method \code{intervene()}}{
+Carry out an intervention that applies a set of accumulation events and manipulation events,
+and changes the values of specific parameters.
+By default, the events are applied first, then the parameters are changed.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Simulator$get_population()}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{Simulator$intervene(
+  acc_events = list(),
+  man_events = list(),
+  pars = list(),
+  events_first = TRUE
+)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{acc_events}}{A list of accumulation events to apply.}
+
+\item{\code{man_events}}{A list of manipulation events to apply.}
+
+\item{\code{pars}}{A list of parameter values to set, see 'details'.}
+
+\item{\code{events_first}}{A logical value. If \code{TRUE} (the default) then the events are applied before any changes to the parameters. If \code{FALSE} the parameter values are changed first.}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Details}{
+The parameter list \code{pars} should be structured as follows:
+Each element should have a name of an Event object and each
+element should be a named list where the names correspond
+to the names of the parameters of whose values are to be configured.
+}
+
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-get_status"></a>}}
+\if{latex}{\out{\hypertarget{method-get_status}{}}}
+\subsection{Method \code{get_status()}}{
+Get the status of the current population.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{Simulator$get_status()}\if{html}{\out{</div>}}
 }
 
 \subsection{Returns}{
-A data.table of the current status
+A data.table of the current status.
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-get_init"></a>}}
+\if{latex}{\out{\hypertarget{method-get_init}{}}}
+\subsection{Method \code{get_init()}}{
+Get the initial status of the population, if available.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{Simulator$get_init()}\if{html}{\out{</div>}}
+}
+
+\subsection{Returns}{
+A data.table of the initial status if it was recorded, otherwise NULL.
 }
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-get_sample"></a>}}
 \if{latex}{\out{\hypertarget{method-get_sample}{}}}
 \subsection{Method \code{get_sample()}}{
+.
 Get a sample of the current population
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{Simulator$get_sample(sampler, ...)}\if{html}{\out{</div>}}
@@ -210,6 +322,21 @@ The sample generated by \code{sampler}.
 }
 }
 \if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-get_history"></a>}}
+\if{latex}{\out{\hypertarget{method-get_history}{}}}
+\subsection{Method \code{get_history()}}{
+Get the simulation history as recorded by the monitor.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{Simulator$get_history()}\if{html}{\out{</div>}}
+}
+
+\subsection{Returns}{
+If the monitor is enabled, A list with an element for each evaluation of the monitor aggregators at their specified intervals
+These elements are lists as well, where the first element is the time index, and the remaining elements
+correspond to the values returned by the evaluated aggregators of the monitor. If no monitor is specified, returns NULL (invisibly).
+}
+}
+\if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-initialize_monitor"></a>}}
 \if{latex}{\out{\hypertarget{method-initialize_monitor}{}}}
 \subsection{Method \code{initialize_monitor()}}{
@@ -226,6 +353,27 @@ Initialize monitors to track specific status variables throughout the simulation
 \item{\code{intervals}}{A numeric vector giving the time interval after which each aggregator should be evaluated.}
 
 \item{\code{combiners}}{If parallel computation is used, this is a list of functions that combine the aggregator results from each parallel worker.}
+}
+\if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-reset"></a>}}
+\if{latex}{\out{\hypertarget{method-reset}{}}}
+\subsection{Method \code{reset()}}{
+Reset the simulated population to the initial state (if initial status was kept).
+Note that any changes to event parameters are kept as is and have to be configured manually, if so desired.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{Simulator$reset(force = FALSE, seeds = NULL)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{force}}{If \code{TRUE}, reset the simulator even if the initial status is not available.}
+
+\item{\code{seeds}}{An integer vector. If given, sets the pseudo-RNG seeds.
+This will then reset the seed numbers, and the simulation time.}
 }
 \if{html}{\out{</div>}}
 }

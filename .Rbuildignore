@@ -1,1 +1,5 @@
 ^pkgdown$
+^.*\.Rproj$
+^\.Rproj\.user$
+^.Rhistory$
+README.Rmd

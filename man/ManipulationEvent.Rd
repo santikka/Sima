@@ -23,6 +23,7 @@ Provides manipulation event functionality. Inherited from Event.
 \if{html}{
 \out{<details ><summary>Inherited methods</summary>}
 \itemize{
+\item \out{<span class="pkg-link" data-pkg="Sima" data-topic="Event" data-id="allocate">}\href{../../Sima/html/Event.html#method-allocate}{\code{Sima::Event$allocate()}}\out{</span>}
 \item \out{<span class="pkg-link" data-pkg="Sima" data-topic="Event" data-id="get_id">}\href{../../Sima/html/Event.html#method-get_id}{\code{Sima::Event$get_id()}}\out{</span>}
 \item \out{<span class="pkg-link" data-pkg="Sima" data-topic="Event" data-id="get_name">}\href{../../Sima/html/Event.html#method-get_name}{\code{Sima::Event$get_name()}}\out{</span>}
 \item \out{<span class="pkg-link" data-pkg="Sima" data-topic="Event" data-id="get_parameters">}\href{../../Sima/html/Event.html#method-get_parameters}{\code{Sima::Event$get_parameters()}}\out{</span>}
@@ -38,15 +39,13 @@ Provides manipulation event functionality. Inherited from Event.
 \subsection{Method \code{apply()}}{
 Apply a manipulation event
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{ManipulationEvent$apply(status, living)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{ManipulationEvent$apply(status)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
 \item{\code{status}}{Current status of the simulated population.}
-
-\item{\code{living}}{A logical vector indicating the individuals that are still alive.}
 }
 \if{html}{\out{</div>}}
 }

@@ -33,16 +33,18 @@ Events are categorized into two distinct groups: manipulation events and accumul
 Both types of events are defined as R6 classes with the following constructors
 
 ```{r, eval = FALSE}
-ManipulationEvent$new(name, description, parameters, mechanism)
-AccumulationEvent$new(name, description, parameters, mechanism)
+ManipulationEvent$new(name, description, parameters, derived, allocated, mechanism)
+AccumulationEvent$new(name, description, parameters, derived, allocated, mechanism)
 ```
 
 For both types of events, the arguments of the constructor are defined as follows: 
 
  - `name` is a character string that serves as a unique identifier. 
  - `description` is an optional argument that provides a text-based explanation about the functionality and purpose of the event
- - `parameters` is numeric vector of parameters
- - `mechanism` is an R expression that defines what the event does. 
+ - `parameters` is a named list of parameters
+ - `derived` is a named list of parameters, that are computed based on `parameters`.
+ - `allocated` a named list of expression that can be used to define persistent private storage for the event.
+ - `mechanism` is an R expression that defines what the event does. This expression can reference `parameters`, `derived` parameters, or `allocated` objects by name
  
 As an example, consider a simulator where events are applied daily and we wish to model the aging of individuals in the population. This can be accomplished with the following manipulation event:
 
@@ -50,12 +52,15 @@ As an example, consider a simulator where events are applied daily and we wish t
 aging <- ManipulationEvent$new(
   name = "Aging",
   description = "Aging of individuals",
+  parameters = list(
+    day = 1.0 / 365.0
+  )
   mechanism = expression({
-    status[living, age := age + 1.0 / 365.0]
+    status[alive == 1L, age := age + day]
   })
 )
 ```
-In this instance the event does not require any parameters. The logical vector `living` is always available denoting those individuals that are still alive in the population at the time of evaluation of the event in question. The shortcut `par` is used to refer to the parameter vector within the `mechanism` expression. The population `status` is a `data.table` so the appropriate syntax is required.
+In this instance we define a simple parameters `day` to describe how much a person ages per iteration in the simulation. We assume the existence of a status variable `alive` in the population that describes whether the person is still alive at present. Note that the parameter `day` can be simply referenced by name within the `mechanism` expression. The population `status` is a `data.table` so the appropriate syntax is required.
 
 In the case of manipulation events, the `mechanism` should not have a return value. In the case of accumulation events however, the return value should be a `data.table` with the same columns as `status` with each row depicting those individuals that are to be added to the population.
 
@@ -64,16 +69,17 @@ In the case of manipulation events, the `mechanism` should not have a return val
 The simulator is defined as an R6 class with the following constructor
 
 ```{r, eval = FALSE}
-Simulator$new(initializer, manipulation_events, accumulation_events, time, seeds, ...)
+Simulator$new(initializer, man_events, acc_events, seeds, keep_init, ...)
 ```
 
 The arguments of the constructor are defined as follows:
 
  - `initializer` is a function that returns the initial population as a `data.table`.
- - `manipulation_events` is a list of `ManipulationEvent` objects.
- - `accumulation_events` is a list of `AccumulationEvent` objects.
- - `time` is an object of R6 class `Time`.
- - `...` are the additional arguments to be passed to `initializer`
+ - `man_events` is a list of `ManipulationEvent` objects.
+ - `acc_events` is a list of `AccumulationEvent` objects.
+ - `seeds` is a vector of RNG seed numbers.
+ - `keep_init` is logical value that indicates whether the initial status of the population should be stored.
+ - `...` are the additional arguments passed to `initializer`
 
 ## Calibration
 
@@ -82,53 +88,54 @@ After defining the events and the initial population, the next task is typically
 The `Simulator` class method `configure` makes it easy to run the simulation with different parameter values while keeping the initial population intact between runs.
 
 ```{r, eval = FALSE}
-Simulator$calibrate(t_sim, p, output, seeds = 123, ...)
+Simulator$configure(N, pars, output, seeds = 123, ...)
 ```
 
 The arguments for the method are as follows:
 
- - `t_sim` is the length of the simulation for a single function evaluation in the optimization. The value that should be used is highly dependent on target feature of the calibration, the objective function and the size of population.
- - `p` is a named list of numeric vectors with names corresponding to the event names to be calibrated. The length of each element should be the same as the number of parameters that the event has.
+ - `N` is the length of the simulation for a single function evaluation in the optimization. The value that should be used is highly dependent on target feature of the calibration, the objective function and the size of population.
+ - `pars` is a named list corresponding to the event names to be calibrated. Each element should also be a named list contain the names of the specific parameters and their values to be changed.
  - `output` is a function that is applied to the synthetic population after the simulation. The first argument should accept the status `data.table`.
  - `seeds` are the seed values to use for random number generation.
- - `...` are the additional arguments passed to output.
+ - `...` are the additional arguments passed to `output`.
 
 For the standard `optim` function, the objective function to use and the calibration process itself take the following form
 ```{r, eval = FALSE}
 obj_optim <- function(par, validation) {
-  p <- list("Event 1" = par[ind_1],
-            "Event 2" = par[ind_2],
-            ...
-            "Event n" = par[ind_n])
-  out <- sim$configure(t_sim, p, output)
+  pars <- list("Event 1" = list("x1_1" = x1_1_value, ...),
+               "Event 2" = list("x2_1" = x2_1_value, ...),
+               ...
+               "Event n" = list("xn_1" = xn_1_value, ...))
+  out <- sim$configure(N, p, output)
   return(objective(out, validation))
 }
 
 result <- optim(par = par_init, fn = obj_optim, validation = some_data)
 ```
-Note that this is not actual usable R code, but simply a pseudo-code representation in R syntax, where the ellipsis simply denotes a list of `n` events. The idea is that the user has to define which event corresponds to which set of parameter indices, for example, event named "Event 1" is assigned parameters from `par` at `ind_1`. The indices should be disjoint. Next, the `configure` method is used to compute a summary statistics from the synthetic population. This is then compared to a set of validation data, provided in `validation` by the actual objective function, denoted here by `objective`. For other functions beside `optim`, alternate formulations will likely have to be used. See the `vignette("example")` for a practical demonstration of the entire calibration process.
+Note that this is not actual usable R code, but simply a pseudo-code representation in R syntax, where the ellipsis simply denotes a list of `n` events or `p_n` parameters for a specific event. The idea is that the user has to define which event corresponds to which set of parameters and their values. For example, for the event named "Event 1", we set its parameter `x1_1` to have the value `x1_1_value` along with any other parameters and values that could be included within `...`. Next, the `configure` method is used to compute a summary statistics from the synthetic population. This is then compared to a set of validation data, provided in `validation` by the actual objective function, denoted here by `objective`. For other functions beside `optim`, alternate formulations will likely have to be used. See the `vignette("example")` for a practical demonstration of the entire calibration process.
  
 ## Running the simulator
 
 Simulation sequences of varying lengths can be carried out with the `Simulator` class method `run`.
 
 ```{r, eval = FALSE}
-Simulator$run(t_sim)
+Simulator$run(N, show_progress = TRUE)
 ```
 
-Here, `t_sim` is a numeric value indicating the length of the simulation in the internal simulation units (e.g., days). The current status of the population can be accessed at any time via the method `get_population`.
+Here, `N` is an integer value indicating the length of the simulation. The current status of the population can be accessed at any time via the method `get_status`. The argument `show_progress` enables a progress bar for the simulation, when not using parallel computation.
 
 ## Parallel computation
 
 The simulator can be configured to take advantage of multiple computing cores via the class method `start_cluster`. 
 ```{r, eval = FALSE}
-Simulator$start_cluster(cl, nc, export, interface)
+Simulator$start_cluster(cl, nc, export, packages, interface = c("doParallel", "doMPI"e)
 ```
 The arguments are:
 
  - `cl` is a cluster object.
  - `nc` denotes the number of workers to use.
  - `export` is a character vector of object names in the global environment that should be made available to the workers, such as user-defined functions or additional data.
+ - `packages` is a character vector of package names that should be loaded on the workers.
  - `interface` gives the `foreach` backend to use, can be either `doParallel` or `doMPI`.
 
 The population is split into chunks of equal size (if possible) and distributed to the available workers along with other necessary data. The implementation takes advantage of the `foreach` package for this purpose and any interface to this looping construct can be used fundamentally, but only `doParallel` and `doMPI` are currently supported. The following example demonstrates the process of setting up the computation cluster in the case of `doParallel`:

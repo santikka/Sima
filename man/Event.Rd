@@ -22,6 +22,7 @@ Provides methods for evaluating event occurrences. The event mechanism should on
 \itemize{
 \item \href{#method-new}{\code{Event$new()}}
 \item \href{#method-apply}{\code{Event$apply()}}
+\item \href{#method-allocate}{\code{Event$allocate()}}
 \item \href{#method-set_parameters}{\code{Event$set_parameters()}}
 \item \href{#method-get_parameters}{\code{Event$get_parameters()}}
 \item \href{#method-set_id}{\code{Event$set_id()}}
@@ -36,7 +37,14 @@ Provides methods for evaluating event occurrences. The event mechanism should on
 \subsection{Method \code{new()}}{
 Create a new Event object.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Event$new(name, description, parameters, mechanism)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{Event$new(
+  name,
+  description = "",
+  parameters = list(),
+  derived = list(),
+  allocated = list(),
+  mechanism
+)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -46,7 +54,14 @@ Create a new Event object.
 
 \item{\code{description}}{A character string giving a more descriptive overview of the event's role.}
 
-\item{\code{parameters}}{A numeric vector giving the initial parameter values of the event.}
+\item{\code{parameters}}{A named list giving the initial parameter values of the event.}
+
+\item{\code{derived}}{A list of expression that define additional parameters based on those in \code{parameters}.
+If given, then \code{parameters} should be named, so its elements can be referenced by elements of \code{derived}.}
+
+\item{\code{allocated}}{A named list of expression that define objects that persist between iterations,
+for example to avoid memory reallocation. The initial \code{status} of the simulator can be referenced by these expressions, a
+s well as any \code{parameters} or \code{derived} parameters of the event itself.}
 
 \item{\code{mechanism}}{An expression that defines the event functionality.}
 }
@@ -64,23 +79,37 @@ Apply an event. Not defined for the superclass.
 
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-set_parameters"></a>}}
-\if{latex}{\out{\hypertarget{method-set_parameters}{}}}
-\subsection{Method \code{set_parameters()}}{
-Set the parameter values of the event.
+\if{html}{\out{<a id="method-allocate"></a>}}
+\if{latex}{\out{\hypertarget{method-allocate}{}}}
+\subsection{Method \code{allocate()}}{
+Allocates persistent objects for the event.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Event$set_parameters(parameters)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{Event$allocate(status)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{parameters}}{can be one of the following:
-A numeric vector giving the parameter values to set, or
-A named numeric vector with names corresponding
-to specific parameters to set, or a list with two elements
-where the first element gives the values and the second
-element gives the positions to set}
+\item{\code{status}}{The initial status of the \code{Simulator}.}
+}
+\if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-set_parameters"></a>}}
+\if{latex}{\out{\hypertarget{method-set_parameters}{}}}
+\subsection{Method \code{set_parameters()}}{
+Set the parameter values of the event.
+Derived parameters are computed again based on the new values.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{Event$set_parameters(pars)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{pars}}{A named list where where the names correspond
+to the names of the parameters of whose values are to be set.}
 }
 \if{html}{\out{</div>}}
 }
@@ -91,9 +120,19 @@ element gives the positions to set}
 \subsection{Method \code{get_parameters()}}{
 Get the current parameter values.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Event$get_parameters()}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{Event$get_parameters(derived = TRUE)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{derived}}{A logical value. If \code{TRUE} (the default), the derived parameters are also returned.}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+A list of the current parameter values.
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-set_id"></a>}}

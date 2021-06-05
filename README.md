@@ -7,7 +7,8 @@ care domain. The work is a part of the DEMO project
 
 ## Installation
 
-Install the released version of the framework from CRAN:
+Install the released version of the framework from CRAN (not released
+yet):
 
 ``` r
 install.packages("Sima")
@@ -33,3 +34,10 @@ the initial population.
 
 Read `vignette("Sima")` for more details on how to construct a simulator
 for your purposes.
+
+## Recent changes
+
+### Changes from version 0.5.1 to 0.5.2
+
+-   The package no longer depends on ‘doMPI’, ‘foreach’ and ‘iterators’
+    packages. Now suggests instead.
