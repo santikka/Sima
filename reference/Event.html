@@ -72,7 +72,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">Sima</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.5.1</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.5.2</span>
       </span>
     </div>
 
@@ -80,7 +80,7 @@
       <ul class="nav navbar-nav">
         <li>
   <a href="../index.html">
-    <span class="fas fa fas fa-home fa-lg"></span>
+    <span class="fas fa-home fa-lg"></span>
      
   </a>
 </li>
@@ -98,7 +98,10 @@
   </a>
   <ul class="dropdown-menu" role="menu">
     <li>
-      <a href="../articles/example.html">Example with diabetes and stroke</a>
+      <a href="../articles/DiabetesAndStroke.html">Diabetes and stroke example</a>
+    </li>
+    <li>
+      <a href="../articles/SickSickerModel.html">Sick-sicker model</a>
     </li>
   </ul>
 </li>
@@ -106,7 +109,7 @@
       <ul class="nav navbar-nav navbar-right">
         <li>
   <a href="https://github.com/santikk/Sima/">
-    <span class="fab fa fab fa-github fa-lg"></span>
+    <span class="fab fa-github fa-lg"></span>
      
   </a>
 </li>
@@ -139,18 +142,19 @@
     <p>Object of <code>R6Class</code> Event, with methods to get/set the internal parameter values and to evaluate the event mechanism.</p>
     <h2 class="hasAnchor" id="public-fields"><a class="anchor" href="#public-fields"></a>Public fields</h2>
 
-    <p><div class="r6-fields"></p><dl'>
+    <p><div class="r6-fields"></p><dl>
 <dt><code>description</code></dt><dd><p>A character string giving a more descriptive overview of the event's role.</p></dd>
 
 </dl><p></div></p>
     <h2 class="hasAnchor" id="methods"><a class="anchor" href="#methods"></a>Methods</h2>
 
     
-<h3>Public methods</h3>
+<h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Public methods</h3>
 
 <ul>
 <li><p><a href='#method-new'><code>Event$new()</code></a></p></li>
 <li><p><a href='#method-apply'><code>Event$apply()</code></a></p></li>
+<li><p><a href='#method-allocate'><code>Event$allocate()</code></a></p></li>
 <li><p><a href='#method-set_parameters'><code>Event$set_parameters()</code></a></p></li>
 <li><p><a href='#method-get_parameters'><code>Event$get_parameters()</code></a></p></li>
 <li><p><a href='#method-set_id'><code>Event$set_id()</code></a></p></li>
@@ -159,73 +163,101 @@
 <li><p><a href='#method-clone'><code>Event$clone()</code></a></p></li>
 </ul>
 <p><hr>
-<a id="method-new"></a></p><h3>Method <code>new()</code></h3>
-<p>Create a new Event object.</p><h3>Usage</h3>
-<p><div class="r"></p><pre><span class='no'>Event</span>$<span class='fu'>new</span>(<span class='no'>name</span>, <span class='no'>description</span>, <span class='no'>parameters</span>, <span class='no'>mechanism</span>)</pre><p></div></p>
+<a id="method-new"></a></p><h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Method <code>new()</code></h3>
+<p>Create a new Event object.</p><h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Usage</h4>
+<p><div class="r"></p><pre><span class='va'>Event</span><span class='op'>$</span><span class='fu'>new</span><span class='op'>(</span>
+  <span class='va'>name</span>,
+  description <span class='op'>=</span> <span class='st'>""</span>,
+  parameters <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span><span class='op'>(</span><span class='op'>)</span>,
+  derived <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span><span class='op'>(</span><span class='op'>)</span>,
+  allocated <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span><span class='op'>(</span><span class='op'>)</span>,
+  <span class='va'>mechanism</span>
+<span class='op'>)</span></pre><p></div></p>
 
-<h3>Arguments</h3>
-<p><div class="arguments"></p><dl'>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Arguments</h4>
+<p><div class="arguments"></p><dl>
 <dt><code>name</code></dt><dd><p>A character string giving the name of the event. Must be unique.</p></dd>
 
 <dt><code>description</code></dt><dd><p>A character string giving a more descriptive overview of the event's role.</p></dd>
 
-<dt><code>parameters</code></dt><dd><p>A numeric vector giving the initial parameter values of the event.</p></dd>
+<dt><code>parameters</code></dt><dd><p>A named list giving the initial parameter values of the event.</p></dd>
+
+<dt><code>derived</code></dt><dd><p>A list of expression that define additional parameters based on those in <code>parameters</code>.
+If given, then <code>parameters</code> should be named, so its elements can be referenced by elements of <code>derived</code>.</p></dd>
+
+<dt><code>allocated</code></dt><dd><p>A named list of expression that define objects that persist between iterations,
+for example to avoid memory reallocation. The initial <code>status</code> of the simulator can be referenced by these expressions, a
+s well as any <code>parameters</code> or <code>derived</code> parameters of the event itself.</p></dd>
 
 <dt><code>mechanism</code></dt><dd><p>An expression that defines the event functionality.</p></dd>
 
 </dl><p></div></p>
 <p><hr>
-<a id="method-apply"></a></p><h3>Method <code><a href='https://rdrr.io/r/base/apply.html'>apply()</a></code></h3>
-<p>Apply an event. Not defined for the superclass.</p><h3>Usage</h3>
-<p><div class="r"></p><pre><span class='no'>Event</span>$<span class='fu'><a href='https://rdrr.io/r/base/apply.html'>apply</a></span>()</pre><p></div></p>
+<a id="method-apply"></a></p><h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Method <code><a href='https://rdrr.io/r/base/apply.html'>apply()</a></code></h3>
+<p>Apply an event. Not defined for the superclass.</p><h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Usage</h4>
+<p><div class="r"></p><pre><span class='va'>Event</span><span class='op'>$</span><span class='fu'>apply</span><span class='op'>(</span><span class='op'>)</span></pre><p></div></p>
 
 <p><hr>
-<a id="method-set_parameters"></a></p><h3>Method <code>set_parameters()</code></h3>
-<p>Set the parameter values of the event.</p><h3>Usage</h3>
-<p><div class="r"></p><pre><span class='no'>Event</span>$<span class='fu'>set_parameters</span>(<span class='no'>parameters</span>)</pre><p></div></p>
+<a id="method-allocate"></a></p><h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Method <code>allocate()</code></h3>
+<p>Allocates persistent objects for the event.</p><h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Usage</h4>
+<p><div class="r"></p><pre><span class='va'>Event</span><span class='op'>$</span><span class='fu'>allocate</span><span class='op'>(</span><span class='va'>status</span><span class='op'>)</span></pre><p></div></p>
 
-<h3>Arguments</h3>
-<p><div class="arguments"></p><dl'>
-<dt><code>parameters</code></dt><dd><p>can be one of the following:
-A numeric vector giving the parameter values to set, or
-A named numeric vector with names corresponding
-to specific parameters to set, or a list with two elements
-where the first element gives the values and the second
-element gives the positions to set</p></dd>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Arguments</h4>
+<p><div class="arguments"></p><dl>
+<dt><code>status</code></dt><dd><p>The initial status of the <code>Simulator</code>.</p></dd>
 
 </dl><p></div></p>
 <p><hr>
-<a id="method-get_parameters"></a></p><h3>Method <code>get_parameters()</code></h3>
-<p>Get the current parameter values.</p><h3>Usage</h3>
-<p><div class="r"></p><pre><span class='no'>Event</span>$<span class='fu'>get_parameters</span>()</pre><p></div></p>
+<a id="method-set_parameters"></a></p><h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Method <code>set_parameters()</code></h3>
+<p>Set the parameter values of the event.
+Derived parameters are computed again based on the new values.</p><h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Usage</h4>
+<p><div class="r"></p><pre><span class='va'>Event</span><span class='op'>$</span><span class='fu'>set_parameters</span><span class='op'>(</span><span class='va'>pars</span><span class='op'>)</span></pre><p></div></p>
 
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Arguments</h4>
+<p><div class="arguments"></p><dl>
+<dt><code>pars</code></dt><dd><p>A named list where where the names correspond
+to the names of the parameters of whose values are to be set.</p></dd>
+
+</dl><p></div></p>
 <p><hr>
-<a id="method-set_id"></a></p><h3>Method <code>set_id()</code></h3>
-<p>Assing an identifier for the event. Should not be called by the user directly.</p><h3>Usage</h3>
-<p><div class="r"></p><pre><span class='no'>Event</span>$<span class='fu'>set_id</span>(<span class='no'>id</span>)</pre><p></div></p>
+<a id="method-get_parameters"></a></p><h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Method <code>get_parameters()</code></h3>
+<p>Get the current parameter values.</p><h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Usage</h4>
+<p><div class="r"></p><pre><span class='va'>Event</span><span class='op'>$</span><span class='fu'>get_parameters</span><span class='op'>(</span>derived <span class='op'>=</span> <span class='cn'>TRUE</span><span class='op'>)</span></pre><p></div></p>
 
-<h3>Arguments</h3>
-<p><div class="arguments"></p><dl'>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Arguments</h4>
+<p><div class="arguments"></p><dl>
+<dt><code>derived</code></dt><dd><p>A logical value. If <code>TRUE</code> (the default), the derived parameters are also returned.</p></dd>
+
+</dl><p></div></p>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Returns</h4>
+<p>A list of the current parameter values.</p>
+<p><hr>
+<a id="method-set_id"></a></p><h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Method <code>set_id()</code></h3>
+<p>Assing an identifier for the event. Should not be called by the user directly.</p><h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Usage</h4>
+<p><div class="r"></p><pre><span class='va'>Event</span><span class='op'>$</span><span class='fu'>set_id</span><span class='op'>(</span><span class='va'>id</span><span class='op'>)</span></pre><p></div></p>
+
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Arguments</h4>
+<p><div class="arguments"></p><dl>
 <dt><code>id</code></dt><dd><p>An integer identifier to set.</p></dd>
 
 </dl><p></div></p>
 <p><hr>
-<a id="method-get_id"></a></p><h3>Method <code>get_id()</code></h3>
-<p>Get the event identifier</p><h3>Usage</h3>
-<p><div class="r"></p><pre><span class='no'>Event</span>$<span class='fu'>get_id</span>()</pre><p></div></p>
+<a id="method-get_id"></a></p><h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Method <code>get_id()</code></h3>
+<p>Get the event identifier</p><h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Usage</h4>
+<p><div class="r"></p><pre><span class='va'>Event</span><span class='op'>$</span><span class='fu'>get_id</span><span class='op'>(</span><span class='op'>)</span></pre><p></div></p>
 
 <p><hr>
-<a id="method-get_name"></a></p><h3>Method <code>get_name()</code></h3>
-<p>Get the name of the event</p><h3>Usage</h3>
-<p><div class="r"></p><pre><span class='no'>Event</span>$<span class='fu'>get_name</span>()</pre><p></div></p>
+<a id="method-get_name"></a></p><h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Method <code>get_name()</code></h3>
+<p>Get the name of the event</p><h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Usage</h4>
+<p><div class="r"></p><pre><span class='va'>Event</span><span class='op'>$</span><span class='fu'>get_name</span><span class='op'>(</span><span class='op'>)</span></pre><p></div></p>
 
 <p><hr>
-<a id="method-clone"></a></p><h3>Method <code>clone()</code></h3>
-<p>The objects of this class are cloneable with this method.</p><h3>Usage</h3>
-<p><div class="r"></p><pre><span class='no'>Event</span>$<span class='fu'>clone</span>(<span class='kw'>deep</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>)</pre><p></div></p>
+<a id="method-clone"></a></p><h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Method <code>clone()</code></h3>
+<p>The objects of this class are cloneable with this method.</p><h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Usage</h4>
+<p><div class="r"></p><pre><span class='va'>Event</span><span class='op'>$</span><span class='fu'>clone</span><span class='op'>(</span>deep <span class='op'>=</span> <span class='cn'>FALSE</span><span class='op'>)</span></pre><p></div></p>
 
-<h3>Arguments</h3>
-<p><div class="arguments"></p><dl'>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Arguments</h4>
+<p><div class="arguments"></p><dl>
 <dt><code>deep</code></dt><dd><p>Whether to make a deep clone.</p></dd>
 
 </dl><p></div></p>
@@ -247,7 +279,7 @@ element gives the positions to set</p></dd>
 </div>
 
 <div class="pkgdown">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.5.1.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.6.1.</p>
 </div>
 
       </footer>

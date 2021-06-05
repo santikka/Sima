@@ -72,7 +72,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">Sima</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.5.1</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.5.2</span>
       </span>
     </div>
 
@@ -80,7 +80,7 @@
       <ul class="nav navbar-nav">
         <li>
   <a href="../index.html">
-    <span class="fas fa fas fa-home fa-lg"></span>
+    <span class="fas fa-home fa-lg"></span>
      
   </a>
 </li>
@@ -98,7 +98,10 @@
   </a>
   <ul class="dropdown-menu" role="menu">
     <li>
-      <a href="../articles/example.html">Example with diabetes and stroke</a>
+      <a href="../articles/DiabetesAndStroke.html">Diabetes and stroke example</a>
+    </li>
+    <li>
+      <a href="../articles/SickSickerModel.html">Sick-sicker model</a>
     </li>
   </ul>
 </li>
@@ -106,7 +109,7 @@
       <ul class="nav navbar-nav navbar-right">
         <li>
   <a href="https://github.com/santikk/Sima/">
-    <span class="fab fa fab fa-github fa-lg"></span>
+    <span class="fab fa-github fa-lg"></span>
      
   </a>
 </li>
@@ -143,7 +146,7 @@
     <h2 class="hasAnchor" id="methods"><a class="anchor" href="#methods"></a>Methods</h2>
 
     
-<h3>Public methods</h3>
+<h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Public methods</h3>
 
 <ul>
 <li><p><a href='#method-apply'><code>ManipulationEvent$apply()</code></a></p></li>
@@ -151,6 +154,7 @@
 </ul>
 <p><details ><summary>Inherited methods</summary>
 <ul>
+<li><p><span class="pkg-link" data-pkg="Sima" data-topic="Event" data-id="allocate"><a href='../../Sima/html/Event.html#method-allocate'><code>Sima::Event$allocate()</code></a></span></p></li>
 <li><p><span class="pkg-link" data-pkg="Sima" data-topic="Event" data-id="get_id"><a href='../../Sima/html/Event.html#method-get_id'><code>Sima::Event$get_id()</code></a></span></p></li>
 <li><p><span class="pkg-link" data-pkg="Sima" data-topic="Event" data-id="get_name"><a href='../../Sima/html/Event.html#method-get_name'><code>Sima::Event$get_name()</code></a></span></p></li>
 <li><p><span class="pkg-link" data-pkg="Sima" data-topic="Event" data-id="get_parameters"><a href='../../Sima/html/Event.html#method-get_parameters'><code>Sima::Event$get_parameters()</code></a></span></p></li>
@@ -161,24 +165,22 @@
 </details>
 
 <hr>
-<a id="method-apply"></a></p><h3>Method <code><a href='https://rdrr.io/r/base/apply.html'>apply()</a></code></h3>
-<p>Apply a manipulation event</p><h3>Usage</h3>
-<p><div class="r"></p><pre><span class='no'>ManipulationEvent</span>$<span class='fu'><a href='https://rdrr.io/r/base/apply.html'>apply</a></span>(<span class='no'>status</span>, <span class='no'>living</span>)</pre><p></div></p>
+<a id="method-apply"></a></p><h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Method <code><a href='https://rdrr.io/r/base/apply.html'>apply()</a></code></h3>
+<p>Apply a manipulation event</p><h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Usage</h4>
+<p><div class="r"></p><pre><span class='va'>ManipulationEvent</span><span class='op'>$</span><span class='fu'>apply</span><span class='op'>(</span><span class='va'>status</span><span class='op'>)</span></pre><p></div></p>
 
-<h3>Arguments</h3>
-<p><div class="arguments"></p><dl'>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Arguments</h4>
+<p><div class="arguments"></p><dl>
 <dt><code>status</code></dt><dd><p>Current status of the simulated population.</p></dd>
-
-<dt><code>living</code></dt><dd><p>A logical vector indicating the individuals that are still alive.</p></dd>
 
 </dl><p></div></p>
 <p><hr>
-<a id="method-clone"></a></p><h3>Method <code>clone()</code></h3>
-<p>The objects of this class are cloneable with this method.</p><h3>Usage</h3>
-<p><div class="r"></p><pre><span class='no'>ManipulationEvent</span>$<span class='fu'>clone</span>(<span class='kw'>deep</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>)</pre><p></div></p>
+<a id="method-clone"></a></p><h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Method <code>clone()</code></h3>
+<p>The objects of this class are cloneable with this method.</p><h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Usage</h4>
+<p><div class="r"></p><pre><span class='va'>ManipulationEvent</span><span class='op'>$</span><span class='fu'>clone</span><span class='op'>(</span>deep <span class='op'>=</span> <span class='cn'>FALSE</span><span class='op'>)</span></pre><p></div></p>
 
-<h3>Arguments</h3>
-<p><div class="arguments"></p><dl'>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Arguments</h4>
+<p><div class="arguments"></p><dl>
 <dt><code>deep</code></dt><dd><p>Whether to make a deep clone.</p></dd>
 
 </dl><p></div></p>
@@ -200,7 +202,7 @@
 </div>
 
 <div class="pkgdown">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.5.1.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.6.1.</p>
 </div>
 
       </footer>

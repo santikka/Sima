@@ -32,7 +32,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">Sima</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.5.1</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.5.2</span>
       </span>
     </div>
 
@@ -40,7 +40,7 @@
       <ul class="nav navbar-nav">
 <li>
   <a href="../index.html">
-    <span class="fas fa fas fa-home fa-lg"></span>
+    <span class="fas fa-home fa-lg"></span>
      
   </a>
 </li>
@@ -58,7 +58,10 @@
   </a>
   <ul class="dropdown-menu" role="menu">
 <li>
-      <a href="../articles/example.html">Example with diabetes and stroke</a>
+      <a href="../articles/DiabetesAndStroke.html">Diabetes and stroke example</a>
+    </li>
+    <li>
+      <a href="../articles/SickSickerModel.html">Sick-sicker model</a>
     </li>
   </ul>
 </li>
@@ -66,7 +69,7 @@
 <ul class="nav navbar-nav navbar-right">
 <li>
   <a href="https://github.com/santikk/Sima/">
-    <span class="fab fa fab fa-github fa-lg"></span>
+    <span class="fab fa-github fa-lg"></span>
      
   </a>
 </li>
@@ -80,7 +83,7 @@
 
       
 
-      </header><div class="row">
+      </header><script src="Sima_files/header-attrs-2.8/header-attrs.js"></script><div class="row">
   <div class="col-md-9 contents">
     <div class="page-header toc-ignore">
       <h1 data-toc-skip>Introduction to the simulation framework</h1>
@@ -109,8 +112,9 @@
 <h2 class="hasAnchor">
 <a href="#constructing-events" class="anchor"></a>Constructing events</h2>
 <p>Both types of events are defined as R6 classes with the following constructors</p>
-<div class="sourceCode"><html><body><pre class="r"><span class="no">ManipulationEvent</span>$<span class="fu">new</span>(<span class="no">name</span>, <span class="no">description</span>, <span class="no">parameters</span>, <span class="no">mechanism</span>)
-<span class="no">AccumulationEvent</span>$<span class="fu">new</span>(<span class="no">name</span>, <span class="no">description</span>, <span class="no">parameters</span>, <span class="no">mechanism</span>)</pre></body></html></div>
+<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="va"><a href="../reference/ManipulationEvent.html">ManipulationEvent</a></span><span class="op">$</span><span class="fu">new</span><span class="op">(</span><span class="va">name</span>, <span class="va">description</span>, <span class="va">parameters</span>, <span class="va">derived</span>, <span class="va">allocated</span>, <span class="va">mechanism</span><span class="op">)</span>
+<span class="va"><a href="../reference/AccumulationEvent.html">AccumulationEvent</a></span><span class="op">$</span><span class="fu">new</span><span class="op">(</span><span class="va">name</span>, <span class="va">description</span>, <span class="va">parameters</span>, <span class="va">derived</span>, <span class="va">allocated</span>, <span class="va">mechanism</span><span class="op">)</span></code></pre></div>
 <p>For both types of events, the arguments of the constructor are defined as follows:</p>
 <ul>
 <li>
@@ -118,38 +122,48 @@
 <li>
 <code>description</code> is an optional argument that provides a text-based explanation about the functionality and purpose of the event</li>
 <li>
-<code>parameters</code> is numeric vector of parameters</li>
+<code>parameters</code> is a named list of parameters</li>
 <li>
-<code>mechanism</code> is an R expression that defines what the event does.</li>
+<code>derived</code> is a named list of parameters, that are computed based on <code>parameters</code>.</li>
+<li>
+<code>allocated</code> a named list of expression that can be used to define persistent private storage for the event.</li>
+<li>
+<code>mechanism</code> is an R expression that defines what the event does. This expression can reference <code>parameters</code>, <code>derived</code> parameters, or <code>allocated</code> objects by name</li>
 </ul>
 <p>As an example, consider a simulator where events are applied daily and we wish to model the aging of individuals in the population. This can be accomplished with the following manipulation event:</p>
-<div class="sourceCode"><html><body><pre class="r"><span class="no">aging</span> <span class="kw">&lt;-</span> <span class="no">ManipulationEvent</span>$<span class="fu">new</span>(
-  <span class="kw">name</span> <span class="kw">=</span> <span class="st">"Aging"</span>,
-  <span class="kw">description</span> <span class="kw">=</span> <span class="st">"Aging of individuals"</span>,
-  <span class="kw">mechanism</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/expression.html">expression</a></span>({
-    <span class="no">status</span>[<span class="no">living</span>, <span class="no">age</span> <span class="kw">:=</span> <span class="no">age</span> + <span class="fl">1.0</span> / <span class="fl">365.0</span>]
-  })
-)</pre></body></html></div>
-<p>In this instance the event does not require any parameters. The logical vector <code>living</code> is always available denoting those individuals that are still alive in the population at the time of evaluation of the event in question. The shortcut <code>par</code> is used to refer to the parameter vector within the <code>mechanism</code> expression. The population <code>status</code> is a <code>data.table</code> so the appropriate syntax is required.</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>aging <span class="ot">&lt;-</span> ManipulationEvent<span class="sc">$</span><span class="fu">new</span>(</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">name =</span> <span class="st">"Aging"</span>,</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">description =</span> <span class="st">"Aging of individuals"</span>,</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">parameters =</span> <span class="fu">list</span>(</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">day =</span> <span class="fl">1.0</span> <span class="sc">/</span> <span class="fl">365.0</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">mechanism =</span> <span class="fu">expression</span>({</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>    status[alive <span class="sc">==</span> 1L, age <span class="sc">:</span><span class="er">=</span> age <span class="sc">+</span> day]</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>  })</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div>
+<p>In this instance we define a simple parameters <code>day</code> to describe how much a person ages per iteration in the simulation. We assume the existence of a status variable <code>alive</code> in the population that describes whether the person is still alive at present. Note that the parameter <code>day</code> can be simply referenced by name within the <code>mechanism</code> expression. The population <code>status</code> is a <code>data.table</code> so the appropriate syntax is required.</p>
 <p>In the case of manipulation events, the <code>mechanism</code> should not have a return value. In the case of accumulation events however, the return value should be a <code>data.table</code> with the same columns as <code>status</code> with each row depicting those individuals that are to be added to the population.</p>
 </div>
 <div id="constructing-a-simulator" class="section level2">
 <h2 class="hasAnchor">
 <a href="#constructing-a-simulator" class="anchor"></a>Constructing a Simulator</h2>
 <p>The simulator is defined as an R6 class with the following constructor</p>
-<div class="sourceCode"><html><body><pre class="r"><span class="no">Simulator</span>$<span class="fu">new</span>(<span class="no">initializer</span>, <span class="no">manipulation_events</span>, <span class="no">accumulation_events</span>, <span class="no">time</span>, <span class="no">seeds</span>, <span class="no">...</span>)</pre></body></html></div>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="va"><a href="../reference/Simulator.html">Simulator</a></span><span class="op">$</span><span class="fu">new</span><span class="op">(</span><span class="va">initializer</span>, <span class="va">man_events</span>, <span class="va">acc_events</span>, <span class="va">seeds</span>, <span class="va">keep_init</span>, <span class="va">...</span><span class="op">)</span></code></pre></div>
 <p>The arguments of the constructor are defined as follows:</p>
 <ul>
 <li>
 <code>initializer</code> is a function that returns the initial population as a <code>data.table</code>.</li>
 <li>
-<code>manipulation_events</code> is a list of <code>ManipulationEvent</code> objects.</li>
+<code>man_events</code> is a list of <code>ManipulationEvent</code> objects.</li>
 <li>
-<code>accumulation_events</code> is a list of <code>AccumulationEvent</code> objects.</li>
+<code>acc_events</code> is a list of <code>AccumulationEvent</code> objects.</li>
 <li>
-<code>time</code> is an object of R6 class <code>Time</code>.</li>
+<code>seeds</code> is a vector of RNG seed numbers.</li>
 <li>
-<code>...</code> are the additional arguments to be passed to <code>initializer</code>
+<code>keep_init</code> is logical value that indicates whether the initial status of the population should be stored.</li>
+<li>
+<code>...</code> are the additional arguments passed to <code>initializer</code>
 </li>
 </ul>
 </div>
@@ -158,45 +172,48 @@
 <a href="#calibration" class="anchor"></a>Calibration</h2>
 <p>After defining the events and the initial population, the next task is typically to obtain parameter values for the events such that some measure of the synthetic population matches that of an external validation data set as closely as possible. To this end, events with parameters can be configured after initialization. Furthermore, it is possible to run multiple simulations with different parameter configurations while keeping the initial population intact and using the same seed values for the pseudo random number generation each time such that the any difference in output will be purely a result of the varying parameter values. Standard R optimization tools such as <code>optim</code> can be used.</p>
 <p>The <code>Simulator</code> class method <code>configure</code> makes it easy to run the simulation with different parameter values while keeping the initial population intact between runs.</p>
-<div class="sourceCode"><html><body><pre class="r"><span class="no">Simulator</span>$<span class="fu">calibrate</span>(<span class="no">t_sim</span>, <span class="no">p</span>, <span class="no">output</span>, <span class="kw">seeds</span> <span class="kw">=</span> <span class="fl">123</span>, <span class="no">...</span>)</pre></body></html></div>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="va">Simulator</span><span class="op">$</span><span class="fu">configure</span><span class="op">(</span><span class="va">N</span>, <span class="va">pars</span>, <span class="va">output</span>, seeds <span class="op">=</span> <span class="fl">123</span>, <span class="va">...</span><span class="op">)</span></code></pre></div>
 <p>The arguments for the method are as follows:</p>
 <ul>
 <li>
-<code>t_sim</code> is the length of the simulation for a single function evaluation in the optimization. The value that should be used is highly dependent on target feature of the calibration, the objective function and the size of population.</li>
+<code>N</code> is the length of the simulation for a single function evaluation in the optimization. The value that should be used is highly dependent on target feature of the calibration, the objective function and the size of population.</li>
 <li>
-<code>p</code> is a named list of numeric vectors with names corresponding to the event names to be calibrated. The length of each element should be the same as the number of parameters that the event has.</li>
+<code>pars</code> is a named list corresponding to the event names to be calibrated. Each element should also be a named list contain the names of the specific parameters and their values to be changed.</li>
 <li>
 <code>output</code> is a function that is applied to the synthetic population after the simulation. The first argument should accept the status <code>data.table</code>.</li>
 <li>
 <code>seeds</code> are the seed values to use for random number generation.</li>
 <li>
-<code>...</code> are the additional arguments passed to output.</li>
+<code>...</code> are the additional arguments passed to <code>output</code>.</li>
 </ul>
 <p>For the standard <code>optim</code> function, the objective function to use and the calibration process itself take the following form</p>
-<div class="sourceCode"><html><body><pre class="r">obj_optim &lt;- function(par, validation) {
-  p &lt;- list("Event 1" = par[ind_1],
-            "Event 2" = par[ind_2],
-            ...
-            "Event n" = par[ind_n])
-  out &lt;- sim$configure(t_sim, p, output)
-  return(objective(out, validation))
-}
-
-result &lt;- optim(par = par_init, fn = obj_optim, validation = some_data)</pre></body></html></div>
-<p>Note that this is not actual usable R code, but simply a pseudo-code representation in R syntax, where the ellipsis simply denotes a list of <code>n</code> events. The idea is that the user has to define which event corresponds to which set of parameter indices, for example, event named “Event 1” is assigned parameters from <code>par</code> at <code>ind_1</code>. The indices should be disjoint. Next, the <code>configure</code> method is used to compute a summary statistics from the synthetic population. This is then compared to a set of validation data, provided in <code>validation</code> by the actual objective function, denoted here by <code>objective</code>. For other functions beside <code>optim</code>, alternate formulations will likely have to be used. See the <code><a href="../articles/example.html">vignette("example")</a></code> for a practical demonstration of the entire calibration process.</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>obj_optim <span class="ot">&lt;-</span> <span class="cf">function</span>(par, validation) {</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  pars <span class="ot">&lt;-</span> <span class="fu">list</span>(<span class="st">"Event 1"</span> <span class="ot">=</span> <span class="fu">list</span>(<span class="st">"x1_1"</span> <span class="ot">=</span> x1_1_value, ...),</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>               <span class="st">"Event 2"</span> <span class="ot">=</span> <span class="fu">list</span>(<span class="st">"x2_1"</span> <span class="ot">=</span> x2_1_value, ...),</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>               ...</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>               <span class="st">"Event n"</span> <span class="ot">=</span> <span class="fu">list</span>(<span class="st">"xn_1"</span> <span class="ot">=</span> xn_1_value, ...))</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>  out <span class="ot">&lt;-</span> sim<span class="sc">$</span><span class="fu">configure</span>(N, p, output)</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(<span class="fu">objective</span>(out, validation))</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>result <span class="ot">&lt;-</span> <span class="fu">optim</span>(<span class="at">par =</span> par_init, <span class="at">fn =</span> obj_optim, <span class="at">validation =</span> some_data)</span></code></pre></div>
+<p>Note that this is not actual usable R code, but simply a pseudo-code representation in R syntax, where the ellipsis simply denotes a list of <code>n</code> events or <code>p_n</code> parameters for a specific event. The idea is that the user has to define which event corresponds to which set of parameters and their values. For example, for the event named “Event 1”, we set its parameter <code>x1_1</code> to have the value <code>x1_1_value</code> along with any other parameters and values that could be included within <code>...</code>. Next, the <code>configure</code> method is used to compute a summary statistics from the synthetic population. This is then compared to a set of validation data, provided in <code>validation</code> by the actual objective function, denoted here by <code>objective</code>. For other functions beside <code>optim</code>, alternate formulations will likely have to be used. See the <code>vignette("example")</code> for a practical demonstration of the entire calibration process.</p>
 </div>
 <div id="running-the-simulator" class="section level2">
 <h2 class="hasAnchor">
 <a href="#running-the-simulator" class="anchor"></a>Running the simulator</h2>
 <p>Simulation sequences of varying lengths can be carried out with the <code>Simulator</code> class method <code>run</code>.</p>
-<div class="sourceCode"><html><body><pre class="r"><span class="no">Simulator</span>$<span class="fu">run</span>(<span class="no">t_sim</span>)</pre></body></html></div>
-<p>Here, <code>t_sim</code> is a numeric value indicating the length of the simulation in the internal simulation units (e.g., days). The current status of the population can be accessed at any time via the method <code>get_population</code>.</p>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="va">Simulator</span><span class="op">$</span><span class="fu">run</span><span class="op">(</span><span class="va">N</span>, show_progress <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></code></pre></div>
+<p>Here, <code>N</code> is an integer value indicating the length of the simulation. The current status of the population can be accessed at any time via the method <code>get_status</code>. The argument <code>show_progress</code> enables a progress bar for the simulation, when not using parallel computation.</p>
 </div>
 <div id="parallel-computation" class="section level2">
 <h2 class="hasAnchor">
 <a href="#parallel-computation" class="anchor"></a>Parallel computation</h2>
 <p>The simulator can be configured to take advantage of multiple computing cores via the class method <code>start_cluster</code>.</p>
-<div class="sourceCode"><html><body><pre class="r"><span class="no">Simulator</span>$<span class="fu">start_cluster</span>(<span class="no">cl</span>, <span class="no">nc</span>, <span class="no">export</span>, <span class="no">interface</span>)</pre></body></html></div>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="va">Simulator</span><span class="op">$</span><span class="fu">start_cluster</span><span class="op">(</span><span class="va">cl</span>, <span class="va">nc</span>, <span class="va">export</span>, <span class="va">packages</span>, interface <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"doParallel"</span>, <span class="st">"doMPI"</span><span class="op">)</span><span class="op">)</span></code></pre></div>
 <p>The arguments are:</p>
 <ul>
 <li>
@@ -206,16 +223,19 @@ result &lt;- optim(par = par_init, fn = obj_optim, validation = some_data)</pre>
 <li>
 <code>export</code> is a character vector of object names in the global environment that should be made available to the workers, such as user-defined functions or additional data.</li>
 <li>
+<code>packages</code> is a character vector of package names that should be loaded on the workers.</li>
+<li>
 <code>interface</code> gives the <code>foreach</code> backend to use, can be either <code>doParallel</code> or <code>doMPI</code>.</li>
 </ul>
 <p>The population is split into chunks of equal size (if possible) and distributed to the available workers along with other necessary data. The implementation takes advantage of the <code>foreach</code> package for this purpose and any interface to this looping construct can be used fundamentally, but only <code>doParallel</code> and <code>doMPI</code> are currently supported. The following example demonstrates the process of setting up the computation cluster in the case of <code>doParallel</code>:</p>
-<div class="sourceCode"><html><body><pre class="r"><span class="no">nc</span> <span class="kw">&lt;-</span> <span class="kw pkg">parallel</span><span class="kw ns">::</span><span class="fu"><a href="https://rdrr.io/r/parallel/detectCores.html">detectCores</a></span>()
-<span class="no">cl</span> <span class="kw">&lt;-</span> <span class="kw pkg">parallel</span><span class="kw ns">::</span><span class="fu"><a href="https://rdrr.io/r/parallel/makeCluster.html">makeCluster</a></span>(<span class="no">nc</span>)
-<span class="kw pkg">doParallel</span><span class="kw ns">::</span><span class="fu"><a href="https://rdrr.io/pkg/doParallel/man/registerDoParallel.html">registerDoParallel</a></span>(<span class="no">cl</span>)
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="va">nc</span> <span class="op">&lt;-</span> <span class="fu">parallel</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/parallel/detectCores.html">detectCores</a></span><span class="op">(</span><span class="op">)</span>
+<span class="va">cl</span> <span class="op">&lt;-</span> <span class="fu">parallel</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/parallel/makeCluster.html">makeCluster</a></span><span class="op">(</span><span class="va">nc</span><span class="op">)</span>
+<span class="fu">doParallel</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/doParallel/man/registerDoParallel.html">registerDoParallel</a></span><span class="op">(</span><span class="va">cl</span><span class="op">)</span>
 
-<span class="no">sim</span>$<span class="fu">start_cluster</span>(<span class="no">cl</span>, <span class="no">nc</span>, <span class="kw">interface</span> <span class="kw">=</span> <span class="st">"doParallel"</span>)
+<span class="va">sim</span><span class="op">$</span><span class="fu">start_cluster</span><span class="op">(</span><span class="va">cl</span>, <span class="va">nc</span>, interface <span class="op">=</span> <span class="st">"doParallel"</span><span class="op">)</span>
 <span class="co"># Carry out calibration / simulations</span>
-<span class="no">sim</span>$<span class="fu">stop_cluster</span>()</pre></body></html></div>
+<span class="va">sim</span><span class="op">$</span><span class="fu">stop_cluster</span><span class="op">(</span><span class="op">)</span></code></pre></div>
 </div>
   </div>
 
@@ -234,7 +254,7 @@ result &lt;- optim(par = par_init, fn = obj_optim, validation = some_data)</pre>
 </div>
 
 <div class="pkgdown">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.5.1.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.6.1.</p>
 </div>
 
       </footer>

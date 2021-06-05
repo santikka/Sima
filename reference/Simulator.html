@@ -72,7 +72,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">Sima</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.5.1</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.5.2</span>
       </span>
     </div>
 
@@ -80,7 +80,7 @@
       <ul class="nav navbar-nav">
         <li>
   <a href="../index.html">
-    <span class="fas fa fas fa-home fa-lg"></span>
+    <span class="fas fa-home fa-lg"></span>
      
   </a>
 </li>
@@ -98,7 +98,10 @@
   </a>
   <ul class="dropdown-menu" role="menu">
     <li>
-      <a href="../articles/example.html">Example with diabetes and stroke</a>
+      <a href="../articles/DiabetesAndStroke.html">Diabetes and stroke example</a>
+    </li>
+    <li>
+      <a href="../articles/SickSickerModel.html">Sick-sicker model</a>
     </li>
   </ul>
 </li>
@@ -106,7 +109,7 @@
       <ul class="nav navbar-nav navbar-right">
         <li>
   <a href="https://github.com/santikk/Sima/">
-    <span class="fab fa fab fa-github fa-lg"></span>
+    <span class="fab fa-github fa-lg"></span>
      
   </a>
 </li>
@@ -137,56 +140,68 @@
     <h2 class="hasAnchor" id="methods"><a class="anchor" href="#methods"></a>Methods</h2>
 
     
-<h3>Public methods</h3>
+<h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Public methods</h3>
 
 <ul>
 <li><p><a href='#method-new'><code>Simulator$new()</code></a></p></li>
 <li><p><a href='#method-start_cluster'><code>Simulator$start_cluster()</code></a></p></li>
 <li><p><a href='#method-stop_cluster'><code>Simulator$stop_cluster()</code></a></p></li>
 <li><p><a href='#method-run'><code>Simulator$run()</code></a></p></li>
+<li><p><a href='#method-run_scenarios'><code>Simulator$run_scenarios()</code></a></p></li>
 <li><p><a href='#method-reconfigure'><code>Simulator$reconfigure()</code></a></p></li>
 <li><p><a href='#method-configure'><code>Simulator$configure()</code></a></p></li>
-<li><p><a href='#method-get_population'><code>Simulator$get_population()</code></a></p></li>
+<li><p><a href='#method-intervene'><code>Simulator$intervene()</code></a></p></li>
+<li><p><a href='#method-get_status'><code>Simulator$get_status()</code></a></p></li>
+<li><p><a href='#method-get_init'><code>Simulator$get_init()</code></a></p></li>
 <li><p><a href='#method-get_sample'><code>Simulator$get_sample()</code></a></p></li>
+<li><p><a href='#method-get_history'><code>Simulator$get_history()</code></a></p></li>
 <li><p><a href='#method-initialize_monitor'><code>Simulator$initialize_monitor()</code></a></p></li>
+<li><p><a href='#method-reset'><code>Simulator$reset()</code></a></p></li>
 <li><p><a href='#method-clone'><code>Simulator$clone()</code></a></p></li>
 </ul>
 <p><hr>
-<a id="method-new"></a></p><h3>Method <code>new()</code></h3>
-<p>Create a new Simulator object.</p><h3>Usage</h3>
-<p><div class="r"></p><pre><span class='no'>Simulator</span>$<span class='fu'>new</span>(
-  <span class='kw'>initializer</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>manipulation_events</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span>(),
-  <span class='kw'>accumulation_events</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span>(),
-  <span class='kw'>time</span> <span class='kw'>=</span> <span class='no'>Time</span>$<span class='fu'>new</span>(<span class='st'>"day"</span>, <span class='fu'><a href='https://rdrr.io/r/base/Sys.time.html'>Sys.Date</a></span>()),
-  <span class='no'>n</span>,
-  <span class='kw'>seeds</span> <span class='kw'>=</span> <span class='fl'>123</span>
-)</pre><p></div></p>
+<a id="method-new"></a></p><h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Method <code>new()</code></h3>
+<p>Create a new Simulator object.</p><h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Usage</h4>
+<p><div class="r"></p><pre><span class='va'>Simulator</span><span class='op'>$</span><span class='fu'>new</span><span class='op'>(</span>
+  initializer <span class='op'>=</span> <span class='cn'>NULL</span>,
+  acc_events <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span><span class='op'>(</span><span class='op'>)</span>,
+  man_events <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span><span class='op'>(</span><span class='op'>)</span>,
+  seeds <span class='op'>=</span> <span class='fl'>123</span>,
+  keep_init <span class='op'>=</span> <span class='cn'>FALSE</span>,
+  <span class='va'>...</span>
+<span class='op'>)</span></pre><p></div></p>
 
-<h3>Arguments</h3>
-<p><div class="arguments"></p><dl'>
-<dt><code>initializer</code></dt><dd><p>A function to generate the initial population.</p></dd>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Arguments</h4>
+<p><div class="arguments"></p><dl>
+<dt><code>initializer</code></dt><dd><p>A function that generates the initial population.</p></dd>
 
-<dt><code>manipulation_events</code></dt><dd><p>A list of ManipulationEvent objects.</p></dd>
+<dt><code>acc_events</code></dt><dd><p>A list of AccumulationEvent objects.</p></dd>
 
-<dt><code>accumulation_events</code></dt><dd><p>A list of AccumulationEvent objects.</p></dd>
-
-<dt><code>time</code></dt><dd><p>A Time object.</p></dd>
-
-<dt><code>n</code></dt><dd><p>Size of the initial population.</p></dd>
+<dt><code>man_events</code></dt><dd><p>A list of ManipulationEvent objects.</p></dd>
 
 <dt><code>seeds</code></dt><dd><p>Seed values for random number generation.</p></dd>
 
+<dt><code>keep_init</code></dt><dd><p>A logical value indicating whether the initial status should be stored.
+If <code>TRUE</code> the initial population can be retrieved with the method get_init.</p></dd>
+
+<dt><code>...</code></dt><dd><p>Additional arguments to <code>initializer</code>,</p></dd>
+
 </dl><p></div></p>
-<h3>Returns</h3>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Returns</h4>
 <p>A new <code>Simulator</code> object.</p>
 <p><hr>
-<a id="method-start_cluster"></a></p><h3>Method <code>start_cluster()</code></h3>
-<p>Start a parallel computation cluster.</p><h3>Usage</h3>
-<p><div class="r"></p><pre><span class='no'>Simulator</span>$<span class='fu'>start_cluster</span>(<span class='no'>cl</span>, <span class='no'>nc</span>, <span class='no'>export</span>, <span class='no'>packages</span>, <span class='kw'>interface</span> <span class='kw'>=</span> <span class='st'>"doParallel"</span>)</pre><p></div></p>
+<a id="method-start_cluster"></a></p><h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Method <code>start_cluster()</code></h3>
+<p>Start a parallel computation cluster.</p><h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Usage</h4>
+<p><div class="r"></p><pre><span class='va'>Simulator</span><span class='op'>$</span><span class='fu'>start_cluster</span><span class='op'>(</span>
+  <span class='va'>cl</span>,
+  <span class='va'>nc</span>,
+  <span class='va'>export</span>,
+  <span class='va'>packages</span>,
+  interface <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='st'>"doParallel"</span>, <span class='st'>"doMPI"</span><span class='op'>)</span>
+<span class='op'>)</span></pre><p></div></p>
 
-<h3>Arguments</h3>
-<p><div class="arguments"></p><dl'>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Arguments</h4>
+<p><div class="arguments"></p><dl>
 <dt><code>cl</code></dt><dd><p>A cluster object.</p></dd>
 
 <dt><code>nc</code></dt><dd><p>Size of the cluster (available computing cores).</p></dd>
@@ -199,49 +214,91 @@
 
 </dl><p></div></p>
 <p><hr>
-<a id="method-stop_cluster"></a></p><h3>Method <code>stop_cluster()</code></h3>
-<p>Stop a parallel computation cluster.</p><h3>Usage</h3>
-<p><div class="r"></p><pre><span class='no'>Simulator</span>$<span class='fu'>stop_cluster</span>()</pre><p></div></p>
+<a id="method-stop_cluster"></a></p><h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Method <code>stop_cluster()</code></h3>
+<p>Stop a parallel computation cluster.</p><h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Usage</h4>
+<p><div class="r"></p><pre><span class='va'>Simulator</span><span class='op'>$</span><span class='fu'>stop_cluster</span><span class='op'>(</span><span class='op'>)</span></pre><p></div></p>
 
 <p><hr>
-<a id="method-run"></a></p><h3>Method <code>run()</code></h3>
-<p>Progress the simulation.</p><h3>Usage</h3>
-<p><div class="r"></p><pre><span class='no'>Simulator</span>$<span class='fu'>run</span>(<span class='no'>t_sim</span>)</pre><p></div></p>
+<a id="method-run"></a></p><h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Method <code>run()</code></h3>
+<p>Progress the simulation.</p><h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Usage</h4>
+<p><div class="r"></p><pre><span class='va'>Simulator</span><span class='op'>$</span><span class='fu'>run</span><span class='op'>(</span><span class='va'>N</span>, show_progress <span class='op'>=</span> <span class='cn'>TRUE</span><span class='op'>)</span></pre><p></div></p>
 
-<h3>Arguments</h3>
-<p><div class="arguments"></p><dl'>
-<dt><code>t_sim</code></dt><dd><p>A numeric value indicating the length of time to process.</p></dd>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Arguments</h4>
+<p><div class="arguments"></p><dl>
+<dt><code>N</code></dt><dd><p>An integer indicating the length of the simulation.</p></dd>
+
+<dt><code>show_progress</code></dt><dd><p>A logical value.
+If <code>TRUE</code> shows a progress bar that tracks the completion of the simulation
+(for non-parallel computations only)</p></dd>
 
 <dt><code>unit</code></dt><dd><p>A character string giving the time unit that <code>t_sim</code> corresponds to.</p></dd>
 
 </dl><p></div></p>
 <p><hr>
-<a id="method-reconfigure"></a></p><h3>Method <code>reconfigure()</code></h3>
-<p>Configure the parameters of Event objects.</p><h3>Usage</h3>
-<p><div class="r"></p><pre><span class='no'>Simulator</span>$<span class='fu'>reconfigure</span>(<span class='no'>p</span>)</pre><p></div></p>
+<a id="method-run_scenarios"></a></p><h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Method <code>run_scenarios()</code></h3>
+<p>Run various scenarios with the same initial population using different interventions with replications.</p><h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Usage</h4>
+<p><div class="r"></p><pre><span class='va'>Simulator</span><span class='op'>$</span><span class='fu'>run_scenarios</span><span class='op'>(</span>
+  <span class='va'>interventions</span>,
+  <span class='va'>replications</span>,
+  <span class='va'>N</span>,
+  seeds_override <span class='op'>=</span> <span class='cn'>NULL</span>,
+  <span class='va'>output</span>,
+  <span class='va'>...</span>
+<span class='op'>)</span></pre><p></div></p>
 
-<h3>Arguments</h3>
-<p><div class="arguments"></p><dl'>
-<dt><code>p</code></dt><dd><p>A named list of parameters, see 'details'.</p></dd>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Arguments</h4>
+<p><div class="arguments"></p><dl>
+<dt><code>interventions</code></dt><dd><p>A list of interventions corresponding to the scenarios to run, see 'details'.</p></dd>
+
+<dt><code>replications</code></dt><dd><p>An integer describing how many times each scenario should be replicated.</p></dd>
+
+<dt><code>N</code></dt><dd><p>A single integer or an integer vector describing the simulation runtime for each scenario.</p></dd>
+
+<dt><code>seeds_override</code></dt><dd><p>If <code>NULL</code>, a different seed is automatically used for each scenario.
+If provided, should be an integer matrix with <code>replications</code> rows and <code><a href='https://rdrr.io/r/base/length.html'>length(interventions)</a></code> columns.</p></dd>
+
+<dt><code>output</code></dt><dd><p>A function to apply to the population after each scenario.</p></dd>
+
+<dt><code>...</code></dt><dd><p>Additional arguments passed to <code>output</code>.</p></dd>
 
 </dl><p></div></p>
-<h3>Details</h3>
-<p>The parameter list <code>p</code> should be structured as follows:
-Each element should be named with a name of an event object.
-Each element should be a list with two elements, one with
-the parameters values and the second of equal length
-giving the indices which to replace.</p>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Details</h4>
+<p>Each element of <code>interventions</code> should be a named list with the following elements:
+<code>acc_events</code>, <code>acc_pars</code>, <code>man_events</code>, <code>man_pars</code> and <code>pars</code>.
+The element <code>acc_events</code> should be a list of objects of class <code>AccumulationEvent</code> and
+<code>acc_pars</code> should be a list of the same length of numeric vectors giving the parameter values for these events.
+Similarly, <code>man_events</code> should be a list of object of class <code>ManipulationEvent</code> with <code>man_pars</code>
+being a list of the same length of numeric vectors giving the parameter values.
+Finally, <code>pars</code> should be a list of parameter values (see <code>configure</code>).
+For additional details, see <code>intervene</code>.</p>
 
 <p><hr>
-<a id="method-configure"></a></p><h3>Method <code>configure()</code></h3>
-<p>Configure events, run a simulation and compute a summary statistic for calibration. The original status is restored after completion.</p><h3>Usage</h3>
-<p><div class="r"></p><pre><span class='no'>Simulator</span>$<span class='fu'>configure</span>(<span class='no'>t_sim</span>, <span class='no'>p</span>, <span class='no'>output</span>, <span class='kw'>seeds</span> <span class='kw'>=</span> <span class='fl'>123</span>, <span class='no'>...</span>)</pre><p></div></p>
+<a id="method-reconfigure"></a></p><h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Method <code>reconfigure()</code></h3>
+<p>Configure the parameters of Event objects.</p><h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Usage</h4>
+<p><div class="r"></p><pre><span class='va'>Simulator</span><span class='op'>$</span><span class='fu'>reconfigure</span><span class='op'>(</span><span class='va'>pars</span><span class='op'>)</span></pre><p></div></p>
 
-<h3>Arguments</h3>
-<p><div class="arguments"></p><dl'>
-<dt><code>t_sim</code></dt><dd><p>A numeric value indicating the length of time to process.</p></dd>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Arguments</h4>
+<p><div class="arguments"></p><dl>
+<dt><code>pars</code></dt><dd><p>A named list of parameters, see 'details'.</p></dd>
 
-<dt><code>p</code></dt><dd><p>A list of parameter values, see 'details'.</p></dd>
+</dl><p></div></p>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Details</h4>
+<p>The parameter list <code>pars</code> should be structured as follows:
+Each element should have a name of an Event object and each
+element should be a named list where the names correspond
+to the names of the parameters of whose values are to be configured.</p>
+
+<p><hr>
+<a id="method-configure"></a></p><h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Method <code>configure()</code></h3>
+<p>Configure events, run a simulation and compute a summary statistic for calibration.
+The original status is restored after completion.</p><h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Usage</h4>
+<p><div class="r"></p><pre><span class='va'>Simulator</span><span class='op'>$</span><span class='fu'>configure</span><span class='op'>(</span><span class='va'>N</span>, <span class='va'>pars</span>, <span class='va'>output</span>, seeds <span class='op'>=</span> <span class='fl'>123</span>, <span class='va'>...</span><span class='op'>)</span></pre><p></div></p>
+
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Arguments</h4>
+<p><div class="arguments"></p><dl>
+<dt><code>N</code></dt><dd><p>A numeric value indicating the length of the simulation</p></dd>
+
+<dt><code>pars</code></dt><dd><p>A list of parameter values, see 'details'.</p></dd>
 
 <dt><code>output</code></dt><dd><p>A function that computes a summary statistic from the simulation.</p></dd>
 
@@ -250,43 +307,88 @@ giving the indices which to replace.</p>
 <dt><code>...</code></dt><dd><p>Additional arguments passed to <code>output</code>.</p></dd>
 
 </dl><p></div></p>
-<h3>Details</h3>
-<p>The parameter list <code>p</code> should be structured as follows:
-Each element should be named with a name of an event object.
-Each element should be a list with two elements, one with
-the parameters values and the second of equal length
-giving the indices which to replace.</p>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Details</h4>
+<p>The parameter list <code>pars</code> should be structured as follows:
+Each element should have a name of an Event object and each
+element should be a named list where the names correspond
+to the names of the parameters of whose values are to be configured.</p>
 
-<h3>Returns</h3>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Returns</h4>
 <p>The output of <code>output_function</code> evaluated for the resulting population.</p>
 <p><hr>
-<a id="method-get_population"></a></p><h3>Method <code>get_population()</code></h3>
-<p>Get the status of the current population</p><h3>Usage</h3>
-<p><div class="r"></p><pre><span class='no'>Simulator</span>$<span class='fu'>get_population</span>()</pre><p></div></p>
+<a id="method-intervene"></a></p><h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Method <code>intervene()</code></h3>
+<p>Carry out an intervention that applies a set of accumulation events and manipulation events,
+and changes the values of specific parameters.
+By default, the events are applied first, then the parameters are changed.</p><h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Usage</h4>
+<p><div class="r"></p><pre><span class='va'>Simulator</span><span class='op'>$</span><span class='fu'>intervene</span><span class='op'>(</span>
+  acc_events <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span><span class='op'>(</span><span class='op'>)</span>,
+  man_events <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span><span class='op'>(</span><span class='op'>)</span>,
+  pars <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span><span class='op'>(</span><span class='op'>)</span>,
+  events_first <span class='op'>=</span> <span class='cn'>TRUE</span>
+<span class='op'>)</span></pre><p></div></p>
 
-<h3>Returns</h3>
-<p>A data.table of the current status</p>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Arguments</h4>
+<p><div class="arguments"></p><dl>
+<dt><code>acc_events</code></dt><dd><p>A list of accumulation events to apply.</p></dd>
+
+<dt><code>man_events</code></dt><dd><p>A list of manipulation events to apply.</p></dd>
+
+<dt><code>pars</code></dt><dd><p>A list of parameter values to set, see 'details'.</p></dd>
+
+<dt><code>events_first</code></dt><dd><p>A logical value. If <code>TRUE</code> (the default) then the events are applied before any changes to the parameters. If <code>FALSE</code> the parameter values are changed first.</p></dd>
+
+</dl><p></div></p>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Details</h4>
+<p>The parameter list <code>pars</code> should be structured as follows:
+Each element should have a name of an Event object and each
+element should be a named list where the names correspond
+to the names of the parameters of whose values are to be configured.</p>
+
 <p><hr>
-<a id="method-get_sample"></a></p><h3>Method <code>get_sample()</code></h3>
-<p>Get a sample of the current population</p><h3>Usage</h3>
-<p><div class="r"></p><pre><span class='no'>Simulator</span>$<span class='fu'>get_sample</span>(<span class='no'>sampler</span>, <span class='no'>...</span>)</pre><p></div></p>
+<a id="method-get_status"></a></p><h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Method <code>get_status()</code></h3>
+<p>Get the status of the current population.</p><h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Usage</h4>
+<p><div class="r"></p><pre><span class='va'>Simulator</span><span class='op'>$</span><span class='fu'>get_status</span><span class='op'>(</span><span class='op'>)</span></pre><p></div></p>
 
-<h3>Arguments</h3>
-<p><div class="arguments"></p><dl'>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Returns</h4>
+<p>A data.table of the current status.</p>
+<p><hr>
+<a id="method-get_init"></a></p><h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Method <code>get_init()</code></h3>
+<p>Get the initial status of the population, if available.</p><h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Usage</h4>
+<p><div class="r"></p><pre><span class='va'>Simulator</span><span class='op'>$</span><span class='fu'>get_init</span><span class='op'>(</span><span class='op'>)</span></pre><p></div></p>
+
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Returns</h4>
+<p>A data.table of the initial status if it was recorded, otherwise NULL.</p>
+<p><hr>
+<a id="method-get_sample"></a></p><h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Method <code>get_sample()</code></h3>
+<p>.
+Get a sample of the current population</p><h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Usage</h4>
+<p><div class="r"></p><pre><span class='va'>Simulator</span><span class='op'>$</span><span class='fu'>get_sample</span><span class='op'>(</span><span class='va'>sampler</span>, <span class='va'>...</span><span class='op'>)</span></pre><p></div></p>
+
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Arguments</h4>
+<p><div class="arguments"></p><dl>
 <dt><code>sampler</code></dt><dd><p>A function that constructs the output sample.</p></dd>
 
 <dt><code>...</code></dt><dd><p>Additional arguments passed to <code>sampler</code>.</p></dd>
 
 </dl><p></div></p>
-<h3>Returns</h3>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Returns</h4>
 <p>The sample generated by <code>sampler</code>.</p>
 <p><hr>
-<a id="method-initialize_monitor"></a></p><h3>Method <code>initialize_monitor()</code></h3>
-<p>Initialize monitors to track specific status variables throughout the simulation at certain intervals.</p><h3>Usage</h3>
-<p><div class="r"></p><pre><span class='no'>Simulator</span>$<span class='fu'>initialize_monitor</span>(<span class='no'>aggregators</span>, <span class='no'>intervals</span>, <span class='kw'>combiners</span> <span class='kw'>=</span> <span class='kw'>NULL</span>)</pre><p></div></p>
+<a id="method-get_history"></a></p><h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Method <code>get_history()</code></h3>
+<p>Get the simulation history as recorded by the monitor.</p><h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Usage</h4>
+<p><div class="r"></p><pre><span class='va'>Simulator</span><span class='op'>$</span><span class='fu'>get_history</span><span class='op'>(</span><span class='op'>)</span></pre><p></div></p>
 
-<h3>Arguments</h3>
-<p><div class="arguments"></p><dl'>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Returns</h4>
+<p>If the monitor is enabled, A list with an element for each evaluation of the monitor aggregators at their specified intervals
+These elements are lists as well, where the first element is the time index, and the remaining elements
+correspond to the values returned by the evaluated aggregators of the monitor. If no monitor is specified, returns NULL (invisibly).</p>
+<p><hr>
+<a id="method-initialize_monitor"></a></p><h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Method <code>initialize_monitor()</code></h3>
+<p>Initialize monitors to track specific status variables throughout the simulation at certain intervals.</p><h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Usage</h4>
+<p><div class="r"></p><pre><span class='va'>Simulator</span><span class='op'>$</span><span class='fu'>initialize_monitor</span><span class='op'>(</span><span class='va'>aggregators</span>, <span class='va'>intervals</span>, combiners <span class='op'>=</span> <span class='cn'>NULL</span><span class='op'>)</span></pre><p></div></p>
+
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Arguments</h4>
+<p><div class="arguments"></p><dl>
 <dt><code>aggregators</code></dt><dd><p>A list of functions to compute aggregate summary statistics from the simulated population.</p></dd>
 
 <dt><code>intervals</code></dt><dd><p>A numeric vector giving the time interval after which each aggregator should be evaluated.</p></dd>
@@ -295,12 +397,26 @@ giving the indices which to replace.</p>
 
 </dl><p></div></p>
 <p><hr>
-<a id="method-clone"></a></p><h3>Method <code>clone()</code></h3>
-<p>The objects of this class are cloneable with this method.</p><h3>Usage</h3>
-<p><div class="r"></p><pre><span class='no'>Simulator</span>$<span class='fu'>clone</span>(<span class='kw'>deep</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>)</pre><p></div></p>
+<a id="method-reset"></a></p><h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Method <code>reset()</code></h3>
+<p>Reset the simulated population to the initial state (if initial status was kept).
+Note that any changes to event parameters are kept as is and have to be configured manually, if so desired.</p><h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Usage</h4>
+<p><div class="r"></p><pre><span class='va'>Simulator</span><span class='op'>$</span><span class='fu'>reset</span><span class='op'>(</span>force <span class='op'>=</span> <span class='cn'>FALSE</span>, seeds <span class='op'>=</span> <span class='cn'>NULL</span><span class='op'>)</span></pre><p></div></p>
 
-<h3>Arguments</h3>
-<p><div class="arguments"></p><dl'>
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Arguments</h4>
+<p><div class="arguments"></p><dl>
+<dt><code>force</code></dt><dd><p>If <code>TRUE</code>, reset the simulator even if the initial status is not available.</p></dd>
+
+<dt><code>seeds</code></dt><dd><p>An integer vector. If given, sets the pseudo-RNG seeds.
+This will then reset the seed numbers, and the simulation time.</p></dd>
+
+</dl><p></div></p>
+<p><hr>
+<a id="method-clone"></a></p><h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Method <code>clone()</code></h3>
+<p>The objects of this class are cloneable with this method.</p><h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Usage</h4>
+<p><div class="r"></p><pre><span class='va'>Simulator</span><span class='op'>$</span><span class='fu'>clone</span><span class='op'>(</span>deep <span class='op'>=</span> <span class='cn'>FALSE</span><span class='op'>)</span></pre><p></div></p>
+
+<h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Arguments</h4>
+<p><div class="arguments"></p><dl>
 <dt><code>deep</code></dt><dd><p>Whether to make a deep clone.</p></dd>
 
 </dl><p></div></p>
@@ -322,7 +438,7 @@ giving the indices which to replace.</p>
 </div>
 
 <div class="pkgdown">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.5.1.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.6.1.</p>
 </div>
 
       </footer>
