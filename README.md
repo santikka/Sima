@@ -1,8 +1,8 @@
 
 # Simulation Framework
 
-A simulation framework for large-scale data generation in the health
-care domain. The work is a part of the DEMO project
+A simulation framework for large-scale data generation with applications
+in the health care domain. The work is a part of the DEMO project
 <http://www.jyu.fi/demo>.
 
 ## Installation
@@ -18,7 +18,7 @@ Alternatively, install the development version from GitHub:
 
 ``` r
 # install.packages("devtools")
-devtools::install_github("santikk/Sima")
+devtools::install_github("santikka/Sima")
 ```
 
 ## Usage
@@ -41,3 +41,9 @@ for your purposes.
 
 -   The package no longer depends on ‘doMPI’, ‘foreach’ and ‘iterators’
     packages. Now suggests instead.
+-   Added explicit support for interventions via the method ‘intervene’.
+-   All event parameters are now named.
+-   Now supports derived parameters for events, that change their values
+    automatically if the parameter values change.
+-   Events can now have their own persistent data.
+-   Removed `Time` class as unnecessary.

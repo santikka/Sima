@@ -39,5 +39,5 @@ Read `vignette("Sima")` for more details on how to construct a simulator for you
  * All event parameters are now named.
  * Now supports derived parameters for events, that change their values automatically if the parameter values change.
  * Events can now have their own persistent data.
- * Removed 'Time' class as unnecessary.
+ * Removed `Time` class as unnecessary.
 
